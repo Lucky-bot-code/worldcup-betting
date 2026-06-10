@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手动投注 - 世界杯彩票盈利系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'Microsoft YaHei', sans-serif; background: #0f1923; color: #e0e0e0; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #1a3a5c, #0f1923); padding: 12px 40px; display: flex; align-items: center; gap: 24px; border-bottom: 2px solid #2c5f2d; }
+.header h1 { font-size: 1.3rem; color: #ffd700; white-space: nowrap; }
+.nav { display: flex; gap: 4px; }
+.nav a { padding: 6px 16px; border-radius: 6px; color: #aaa; text-decoration: none; font-size: .85rem; background: #1a2a38; border: 1px solid #2a3a48; }
+.nav a.active { background: #2c5f2d; color: #fff; border-color: #2c5f2d; }
+.nav a:hover { border-color: #3a8a3a; }
+.bankroll-display { margin-left: auto; font-size: 1.1rem; color: #ffd700; }
+.bankroll-display .profit { font-size: .8rem; margin-left: 8px; }
+.main { display: grid; grid-template-columns: 420px 1fr; gap: 20px; padding: 20px 40px; }
+.card { background: #1a2a38; border-radius: 10px; padding: 20px; border: 1px solid #2a3a48; }
+.card h3 { color: #ffd700; margin-bottom: 14px; font-size: .95rem; }
+.form-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.form-row input, .form-row select { padding: 7px 10px; border-radius: 6px; border: 1px solid #3a3a3a; background: #0f1923; color: #fff; font-size: .85rem; }
+.form-row input { width: 120px; }
+.form-row select { min-width: 100px; }
+form button, .btn { padding: 7px 16px; border-radius: 6px; border: 1px solid #3a8a3a; background: #2c5f2d; color: #fff; cursor: pointer; font-size: .85rem; font-weight: bold; }
+form button:hover, .btn:hover { background: #3a8a3a; }
+.btn-sm { padding: 4px 10px; font-size: .75rem; border-radius: 4px; }
+.btn-outline { background: transparent; border: 1px solid #3a3a3a; color: #aaa; }
+.btn-outline:hover { border-color: #3a8a3a; color: #fff; }
+.btn-danger { background: #5f2c2c; border-color: #8a3a3a; }
+.btn-danger:hover { background: #8a3a3a; }
+.match-list { max-height: 450px; overflow-y: auto; }
+.match-row { display: flex; align-items: center; gap: 8px; padding: 10px 8px; border-bottom: 1px solid #1e3040; font-size: .85rem; cursor: pointer; }
+.match-row:hover { background: #1e3040; }
+.match-row .info { flex: 1; min-width: 0; }
+.match-row .teams { font-weight: bold; }
+.match-row .meta { font-size: .75rem; color: #888; }
+.match-row .score { font-size: 1rem; font-weight: bold; color: #ffd700; min-width: 36px; text-align: center; }
+.badge { padding: 2px 8px; border-radius: 4px; font-size: .7rem; font-weight: bold; }
+.badge-settled { background: #2c5f2d; color: #4caf50; }
+.badge-pending { background: #3a3a1a; color: #ffd700; }
+.badge-win { background: #2c5f2d; color: #4caf50; }
+.badge-lose { background: #5f2c2c; color: #f44336; }
+.badge-push { background: #3a3a1a; color: #ffd700; }
+.badge-wait { background: #1a3a5c; color: #5a9acf; }
+.tabs { display: flex; gap: 2px; margin-bottom: 14px; }
+.tab { padding: 7px 14px; background: #0f1923; border: 1px solid #2a3a48; border-radius: 6px 6px 0 0; cursor: pointer; color: #aaa; font-size: .82rem; }
+.tab.active { background: #2c5f2d; color: #fff; border-color: #2c5f2d; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.bet-form label { display: block; font-size: .8rem; color: #aaa; margin-bottom: 4px; margin-top: 10px; }
+.bet-form input[type="number"] { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #3a3a3a; background: #0f1923; color: #fff; font-size: .9rem; }
+.bet-form .direction-group { display: flex; gap: 8px; margin-top: 6px; }
+.bet-form .dir-btn { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #3a3a3a; background: #0f1923; color: #aaa; cursor: pointer; text-align: center; font-size: .85rem; }
+.bet-form .dir-btn:hover { border-color: #ffd700; color: #fff; }
+.bet-form .dir-btn.selected { border-color: #ffd700; background: #2c5f2d; color: #fff; font-weight: bold; }
+.bet-form .odds-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.bet-form .odds-grid input { width: 100%; }
+.submit-bet { width: 100%; margin-top: 16px; padding: 12px; font-size: 1rem; }
+.preview { margin-top: 12px; padding: 12px; background: #0f1923; border-radius: 8px; font-size: .85rem; }
+.preview .line { display: flex; justify-content: space-between; padding: 3px 0; }
+.preview .est-profit { color: #4caf50; font-weight: bold; font-size: .95rem; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.metric { background: #0f1923; border-radius: 8px; padding: 12px; text-align: center; }
+.metric .value { font-size: 1.4rem; font-weight: bold; }
+.metric .label { font-size: .75rem; color: #888; margin-top: 4px; }
+.metric .positive { color: #4caf50; }
+.metric .negative { color: #f44336; }
+.full-width { grid-column: 1 / -1; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+th { text-align: left; padding: 10px 8px; border-bottom: 2px solid #2a3a48; color: #aaa; }
+td { padding: 8px; border-bottom: 1px solid #1a2a38; }
+tr:hover td { background: #1e3040; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #1a2a38; border-radius: 12px; padding: 24px; border: 1px solid #2a3a48; min-width: 300px; max-width: 400px; }
+.modal h3 { color: #ffd700; margin-bottom: 16px; }
+.modal input { width: 80px; padding: 8px; border-radius: 6px; border: 1px solid #3a3a3a; background: #0f1923; color: #fff; font-size: .9rem; text-align: center; }
+.modal .actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+.filter-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.empty { text-align: center; padding: 30px; color: #666; font-size: .85rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>世界杯彩票盈利系统</h1>
+  <div class="nav">
+    <a href="/">回测系统</a>
+    <a href="/manual" class="active">手动投注</a>
+    <a href="/smart">智能下注</a>
+  </div>
+  <div class="bankroll-display">
+    资金: <strong id="headerBankroll">¥10,000</strong>
+    <span class="profit" id="headerProfit"></span>
+  </div>
+</div>
+
+<div class="main">
+  <!-- 左侧：比赛管理 -->
+  <div class="card" id="matchPanel">
+    <h3>比赛管理</h3>
+    <div class="form-row">
+      <input type="text" id="matchDay" placeholder="日期 如 6/14" style="width:90px">
+      <select id="matchStage">
+        <option value="小组赛">小组赛</option>
+        <option value="16强">16强</option>
+        <option value="8强">8强</option>
+        <option value="半决赛">半决赛</option>
+        <option value="季军赛">季军赛</option>
+        <option value="决赛">决赛</option>
+      </select>
+      <input type="text" id="teamHome" placeholder="主队" style="width:100px">
+      <input type="text" id="teamAway" placeholder="客队" style="width:100px">
+      <button onclick="addMatch()">添加</button>
+    </div>
+    <div class="filter-row">
+      <select id="filterStage" onchange="loadMatches()" style="font-size:.8rem;padding:4px 8px;background:#0f1923;color:#aaa;border:1px solid #3a3a3a;border-radius:4px;">
+        <option value="全部">全部阶段</option>
+        <option value="小组赛">小组赛</option>
+        <option value="淘汰赛">淘汰赛</option>
+      </select>
+      <select id="filterSettled" onchange="loadMatches()" style="font-size:.8rem;padding:4px 8px;background:#0f1923;color:#aaa;border:1px solid #3a3a3a;border-radius:4px;">
+        <option value="">全部状态</option>
+        <option value="0">未结算</option>
+        <option value="1">已结算</option>
+      </select>
+    </div>
+    <div class="match-list" id="matchList">
+      <div class="empty">暂无比赛，请先添加</div>
+    </div>
+  </div>
+
+  <!-- 右侧：投注操作 -->
+  <div class="card" id="betPanel">
+    <h3>投注操作</h3>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.8rem;color:#aaa;">选择比赛</label>
+      <select id="betMatch" onchange="onMatchSelect()" style="width:100%;padding:8px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.85rem;">
+        <option value="">-- 请选择比赛 --</option>
+      </select>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('spf')">胜平负</div>
+      <div class="tab" onclick="switchTab('over_under')">进球数</div>
+      <div class="tab" onclick="switchTab('score')">比分</div>
+    </div>
+
+    <!-- 胜平负 -->
+    <div class="tab-panel active bet-form" id="panel-spf">
+      <label>赔率</label>
+      <div class="odds-grid">
+        <div><span style="font-size:.75rem;color:#888;">主胜</span><input type="number" id="spfHome" step="0.01" min="1.01" placeholder="2.10"></div>
+        <div><span style="font-size:.75rem;color:#888;">平局</span><input type="number" id="spfDraw" step="0.01" min="1.01" placeholder="3.40"></div>
+        <div><span style="font-size:.75rem;color:#888;">客胜</span><input type="number" id="spfAway" step="0.01" min="1.01" placeholder="3.00"></div>
+      </div>
+      <label>投注方向</label>
+      <div class="direction-group" id="spfDir">
+        <div class="dir-btn" data-dir="home" onclick="selectDir(this, 'spf')">主胜</div>
+        <div class="dir-btn" data-dir="draw" onclick="selectDir(this, 'spf')">平局</div>
+        <div class="dir-btn" data-dir="away" onclick="selectDir(this, 'spf')">客胜</div>
+      </div>
+    </div>
+
+    <!-- 总进球数 -->
+    <div class="tab-panel bet-form" id="panel-over_under">
+      <label>总进球数赔率</label>
+      <input type="number" id="totalGoalsOdds" step="0.01" min="1.01" placeholder="赔率 如 4.50" style="width:140px">
+      <label>押注具体进球数</label>
+      <div class="direction-group" id="ouDir">
+        <div class="dir-btn" data-dir="0" onclick="selectDir(this, 'over_under')">0球</div>
+        <div class="dir-btn" data-dir="1" onclick="selectDir(this, 'over_under')">1球</div>
+        <div class="dir-btn" data-dir="2" onclick="selectDir(this, 'over_under')">2球</div>
+        <div class="dir-btn" data-dir="3" onclick="selectDir(this, 'over_under')">3球</div>
+        <div class="dir-btn" data-dir="4" onclick="selectDir(this, 'over_under')">4球</div>
+        <div class="dir-btn" data-dir="5+" onclick="selectDir(this, 'over_under')">5+球</div>
+      </div>
+    </div>
+
+    <!-- 比分 -->
+    <div class="tab-panel bet-form" id="panel-score">
+      <label>预测比分</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" id="scoreHome" min="0" max="10" placeholder="主" style="width:60px">
+        <span style="color:#aaa;">—</span>
+        <input type="number" id="scoreAway" min="0" max="10" placeholder="客" style="width:60px">
+      </div>
+      <label>赔率</label>
+      <input type="number" id="scoreOdds" step="0.01" min="1.01" placeholder="8.00" style="width:120px">
+    </div>
+
+    <label>投注金额</label>
+    <input type="number" id="betStake" value="100" min="1" step="10" style="width:120px;margin-bottom:8px;">
+
+    <div class="preview" id="betPreview" style="display:none;">
+      <div class="line"><span>类型</span><span id="prevType">--</span></div>
+      <div class="line"><span>方向</span><span id="prevDir">--</span></div>
+      <div class="line"><span>赔率</span><span id="prevOdds">--</span></div>
+      <div class="line"><span>金额</span><span id="prevStake">--</span></div>
+      <div class="line est-profit"><span>预计盈利</span><span id="prevProfit">--</span></div>
+    </div>
+
+    <button class="submit-bet" onclick="placeBet()">确认下注</button>
+  </div>
+
+  <!-- 统计概览 + 投注记录 -->
+  <div class="card full-width">
+    <h3>投注统计</h3>
+    <div class="metrics">
+      <div class="metric"><div class="value" id="statProfit">¥0</div><div class="label">总盈亏</div></div>
+      <div class="metric"><div class="value" id="statRate">--</div><div class="label">胜率</div></div>
+      <div class="metric"><div class="value" id="statBets">0</div><div class="label">已结算</div></div>
+      <div class="metric"><div class="value" id="statPending">0</div><div class="label">待定</div></div>
+    </div>
+  </div>
+
+  <div class="card full-width">
+    <h3>投注记录 <span id="betCount" style="color:#888;font-weight:normal;font-size:.85rem;"></span></h3>
+    <div class="filter-row">
+      <select id="filterBetResult" onchange="loadBets()" style="font-size:.8rem;padding:4px 8px;background:#0f1923;color:#aaa;border:1px solid #3a3a3a;border-radius:4px;">
+        <option value="">全部</option>
+        <option value="待定">待定</option>
+        <option value="win">已赢</option>
+        <option value="lose">已输</option>
+        <option value="push">走水</option>
+      </select>
+    </div>
+    <div style="max-height:350px;overflow-y:auto;">
+      <table id="betTable">
+        <thead><tr>
+          <th>比赛</th><th>类型</th><th>方向</th><th>赔率</th><th>金额</th><th>结果</th><th>盈亏</th><th>操作</th>
+        </tr></thead>
+        <tbody id="betBody"><tr><td colspan="8" class="empty">暂无投注记录</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 赛果录入弹窗 -->
+<div class="modal-overlay" id="scoreModal">
+  <div class="modal">
+    <h3>录入赛果</h3>
+    <p id="scoreMatchInfo" style="margin-bottom:12px;color:#aaa;font-size:.85rem;"></p>
+    <div style="display:flex;gap:16px;align-items:center;justify-content:center;margin-bottom:14px;">
+      <input type="number" id="scoreH" min="0" max="15" placeholder="主队进球" style="width:80px">
+      <span style="font-size:1.2rem;color:#ffd700;">—</span>
+      <input type="number" id="scoreA" min="0" max="15" placeholder="客队进球" style="width:80px">
+    </div>
+    <p style="font-size:.75rem;color:#666;margin-bottom:6px;">赛前SPF赔率（供智能分析用，可选）</p>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <input type="number" id="oddsH" step="0.01" min="1.01" placeholder="主胜赔率" style="width:90px">
+      <input type="number" id="oddsD" step="0.01" min="1.01" placeholder="平局赔率" style="width:90px">
+      <input type="number" id="oddsA" step="0.01" min="1.01" placeholder="客胜赔率" style="width:90px">
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline" onclick="closeScoreModal()">取消</button>
+      <button class="btn" onclick="submitScore()">确认结算</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let currentTab = 'spf';
+let selectedDirection = { spf: '', over_under: '', score: '' };
+let scoreModalMatchId = null;
+
+// ── 资金 ──────────────────────────────────────────────
+
+async function loadBankroll() {
+  const resp = await fetch(API + '/api/manual/bankroll');
+  const data = await resp.json();
+  document.getElementById('headerBankroll').textContent = '¥' + data.current_bankroll.toLocaleString();
+  const profit = data.total_profit;
+  const pEl = document.getElementById('headerProfit');
+  pEl.textContent = (profit >= 0 ? '+' : '') + '¥' + profit.toLocaleString();
+  pEl.className = 'profit ' + (profit >= 0 ? 'positive' : 'negative');
+
+  document.getElementById('statProfit').textContent = (profit >= 0 ? '+' : '') + '¥' + profit.toLocaleString();
+  document.getElementById('statProfit').className = 'value ' + (profit >= 0 ? 'positive' : 'negative');
+  document.getElementById('statRate').textContent = (data.win_rate * 100).toFixed(1) + '%';
+  document.getElementById('statBets').textContent = data.total_bets;
+  document.getElementById('statPending').textContent = data.pending_bets;
+}
+
+// ── 比赛管理 ──────────────────────────────────────────
+
+async function loadMatches() {
+  const stage = document.getElementById('filterStage').value;
+  const is_settled = document.getElementById('filterSettled').value;
+  let url = API + '/api/manual/matches?page_size=200';
+  if (stage !== '全部') url += '&stage=' + encodeURIComponent(stage);
+  if (is_settled !== '') url += '&is_settled=' + is_settled;
+
+  const resp = await fetch(url);
+  const data = await resp.json();
+  const list = document.getElementById('matchList');
+  if (!data.data.length) { list.innerHTML = '<div class="empty">暂无比赛，请先添加</div>'; }
+  else {
+    list.innerHTML = data.data.map(m => {
+      const settled = m.is_settled ? '<span class="badge badge-settled">已结算</span>' : '<span class="badge badge-pending">未结算</span>';
+      const score = m.score_home !== null ? `${m.score_home}-${m.score_away}` : '--';
+      return `<div class="match-row">
+        <div class="info"><div class="teams">${m.team_home} vs ${m.team_away}</div>
+        <div class="meta">${m.match_day} · ${m.stage} · ${m.bet_count}笔下注 ${settled}</div></div>
+        <div class="score">${score}</div>
+        ${m.is_settled ? '' : `<button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openScoreModal(${m.id},'${m.team_home} vs ${m.team_away}')">赛果</button>`}
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteMatch(${m.id},${m.bet_count})">删</button>
+      </div>`;
+    }).join('');
+  }
+  // 更新比赛下拉
+  loadBetMatchOptions();
+}
+
+async function loadBetMatchOptions() {
+  const resp = await fetch(API + '/api/manual/matches?is_settled=0&page_size=200');
+  const data = await resp.json();
+  const sel = document.getElementById('betMatch');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">-- 请选择比赛 --</option>';
+  data.data.forEach(m => {
+    sel.add(new Option(`${m.match_day} ${m.team_home} vs ${m.team_away}`, m.id));
+  });
+  sel.value = current;
+}
+
+async function addMatch() {
+  const body = {
+    match_day: document.getElementById('matchDay').value,
+    stage: document.getElementById('matchStage').value,
+    team_home: document.getElementById('teamHome').value.trim(),
+    team_away: document.getElementById('teamAway').value.trim(),
+  };
+  if (!body.team_home || !body.team_away) { alert('请填写主客队名称'); return; }
+  if (!body.match_day) { body.match_day = new Date().toISOString().slice(0, 10); }
+
+  await fetch(API + '/api/manual/matches', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  document.getElementById('teamHome').value = '';
+  document.getElementById('teamAway').value = '';
+  loadMatches();
+}
+
+async function deleteMatch(id, betCount) {
+  if (betCount > 0) { alert('已有投注的比赛不可删除'); return; }
+  if (!confirm('确认删除？')) return;
+  await fetch(API + '/api/manual/matches/' + id, { method: 'DELETE' });
+  loadMatches();
+}
+
+// ── 赛果录入 ──────────────────────────────────────────
+
+function openScoreModal(id, info) {
+  scoreModalMatchId = id;
+  document.getElementById('scoreMatchInfo').textContent = info;
+  document.getElementById('scoreH').value = '';
+  document.getElementById('scoreA').value = '';
+  document.getElementById('scoreModal').classList.add('show');
+}
+function closeScoreModal() {
+  document.getElementById('scoreModal').classList.remove('show');
+  scoreModalMatchId = null;
+}
+async function submitScore() {
+  const h = parseInt(document.getElementById('scoreH').value);
+  const a = parseInt(document.getElementById('scoreA').value);
+  if (isNaN(h) || isNaN(a)) { alert('请输入比分'); return; }
+  const body = { score_home: h, score_away: a };
+  const oh = parseFloat(document.getElementById('oddsH').value);
+  const od = parseFloat(document.getElementById('oddsD').value);
+  const oa = parseFloat(document.getElementById('oddsA').value);
+  if (oh) body.odds_home = oh;
+  if (od) body.odds_draw = od;
+  if (oa) body.odds_away = oa;
+  const resp = await fetch(API + '/api/manual/matches/' + scoreModalMatchId + '/score', {
+    method: 'PUT', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body),
+  });
+  const result = await resp.json();
+  closeScoreModal();
+  loadMatches();
+  loadBets();
+  loadBankroll();
+  if (result.settled_bets && result.settled_bets.length > 0) {
+    const summary = result.settled_bets.map(b => `${b.result==='win'?'赢':b.result==='lose'?'输':'走水'} ¥${b.profit.toFixed(2)}`).join(', ');
+    alert(`结算完成: ${summary}`);
+  }
+}
+
+// ── 投注操作 ──────────────────────────────────────────
+
+function switchTab(type) {
+  currentTab = type;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === ['spf','over_under','score'].indexOf(type)));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + type).classList.add('active');
+  updateBetPreview();
+}
+
+function selectDir(el, type) {
+  el.parentElement.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedDirection[type] = el.dataset.dir;
+  // 比分类型：自动拼接方向
+  if (type === 'score') {
+    const h = document.getElementById('scoreHome').value;
+    const a = document.getElementById('scoreAway').value;
+    if (h !== '' && a !== '') selectedDirection.score = h + '-' + a;
+  }
+  updateBetPreview();
+}
+
+function onMatchSelect() {
+  updateBetPreview();
+}
+
+// 比分方向实时更新
+document.addEventListener('DOMContentLoaded', () => {
+  ['scoreHome', 'scoreAway'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      const h = document.getElementById('scoreHome').value;
+      const a = document.getElementById('scoreAway').value;
+      if (h !== '' && a !== '') {
+        selectedDirection.score = h + '-' + a;
+        updateBetPreview();
+      }
+    });
+  });
+  // 金额变化也更新预览
+  document.getElementById('betStake').addEventListener('input', updateBetPreview);
+  ['spfHome','spfDraw','spfAway','ouOver','ouUnder','scoreOdds'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateBetPreview);
+  });
+});
+
+function updateBetPreview() {
+  const preview = document.getElementById('betPreview');
+  let type, dir, odds, stake;
+
+  stake = parseFloat(document.getElementById('betStake').value) || 0;
+
+  if (currentTab === 'spf') {
+    type = '胜平负';
+    dir = { home: '主胜', draw: '平局', away: '客胜' }[selectedDirection.spf] || '--';
+    if (selectedDirection.spf === 'home') odds = parseFloat(document.getElementById('spfHome').value);
+    else if (selectedDirection.spf === 'draw') odds = parseFloat(document.getElementById('spfDraw').value);
+    else if (selectedDirection.spf === 'away') odds = parseFloat(document.getElementById('spfAway').value);
+    else odds = 0;
+  } else if (currentTab === 'over_under') {
+    type = '总进球数';
+    dir = selectedDirection.over_under || '--';
+    odds = parseFloat(document.getElementById('totalGoalsOdds').value) || 0;
+  } else {
+    type = '比分';
+    dir = selectedDirection.score || '--';
+    odds = parseFloat(document.getElementById('scoreOdds').value) || 0;
+  }
+
+  if (!dir || dir === '--' || !odds) { preview.style.display = 'none'; return; }
+  preview.style.display = 'block';
+  document.getElementById('prevType').textContent = type;
+  document.getElementById('prevDir').textContent = dir;
+  document.getElementById('prevOdds').textContent = odds.toFixed(2);
+  document.getElementById('prevStake').textContent = '¥' + stake.toFixed(0);
+  const estProfit = stake * (odds - 1);
+  document.getElementById('prevProfit').textContent = estProfit > 0 ? '+¥' + estProfit.toFixed(2) : '--';
+}
+
+async function placeBet() {
+  const matchId = parseInt(document.getElementById('betMatch').value);
+  if (!matchId) { alert('请选择比赛'); return; }
+
+  const stake = parseFloat(document.getElementById('betStake').value);
+  if (!stake || stake <= 0) { alert('请输入有效金额'); return; }
+
+  let body = { match_id: matchId, stake: stake };
+
+  if (currentTab === 'spf') {
+    if (!selectedDirection.spf) { alert('请选择投注方向'); return; }
+    let odds;
+    if (selectedDirection.spf === 'home') odds = parseFloat(document.getElementById('spfHome').value);
+    else if (selectedDirection.spf === 'draw') odds = parseFloat(document.getElementById('spfDraw').value);
+    else odds = parseFloat(document.getElementById('spfAway').value);
+    if (!odds || odds < 1.01) { alert('请输入有效赔率'); return; }
+    body.odds_type = 'spf';
+    body.bet_direction = selectedDirection.spf;
+    body.odds_taken = odds;
+
+  } else if (currentTab === 'over_under') {
+    if (!selectedDirection.over_under) { alert('请选择总进球数'); return; }
+    const odds = parseFloat(document.getElementById('totalGoalsOdds').value);
+    if (!odds || odds < 1.01) { alert('请输入有效赔率'); return; }
+    body.odds_type = 'over_under';
+    body.bet_direction = selectedDirection.over_under;
+    body.odds_taken = odds;
+
+  } else {
+    const h = parseInt(document.getElementById('scoreHome').value);
+    const a = parseInt(document.getElementById('scoreAway').value);
+    if (isNaN(h) || isNaN(a)) { alert('请输入预测比分'); return; }
+    const odds = parseFloat(document.getElementById('scoreOdds').value);
+    if (!odds || odds < 1.01) { alert('请输入有效赔率'); return; }
+    body.odds_type = 'score';
+    body.bet_direction = h + '-' + a;
+    body.odds_taken = odds;
+  }
+
+  const resp = await fetch(API + '/api/manual/bets', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+  });
+  if (!resp.ok) { const err = await resp.json(); alert(err.detail); return; }
+
+  // 清空选择
+  selectedDirection = { spf: '', over_under: '', score: '' };
+  document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('betPreview').style.display = 'none';
+
+  loadBets();
+  loadBankroll();
+  loadMatches();
+}
+
+// ── 投注记录 ──────────────────────────────────────────
+
+async function loadBets() {
+  const result = document.getElementById('filterBetResult').value;
+  let url = API + '/api/manual/bets?page_size=200';
+  if (result) url += '&result=' + result;
+
+  const resp = await fetch(url);
+  const data = await resp.json();
+  document.getElementById('betCount').textContent = `共 ${data.total} 笔下注`;
+  const tbody = document.getElementById('betBody');
+  if (!data.data.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无投注记录</td></tr>';
+    return;
+  }
+  const typeLabel = { spf: '胜平负', over_under: '总进球数', score: '比分' };
+  const dirLabel = {
+    home: '主胜', draw: '平局', away: '客胜',
+  };
+  tbody.innerHTML = data.data.map(b => {
+    const resultClass = b.result === 'win' ? 'badge-win' : b.result === 'lose' ? 'badge-lose' : b.result === 'push' ? 'badge-push' : 'badge-wait';
+    const resultLabel = { win: '赢', lose: '输', push: '走水', '待定': '待定' }[b.result] || b.result;
+    const profitClass = b.profit > 0 ? 'positive' : b.profit < 0 ? 'negative' : '';
+    const canDelete = b.result === '待定';
+    let label = dirLabel[b.bet_direction] || b.bet_direction;
+    if (b.odds_type === 'over_under') label = '总进球' + b.bet_direction + '球';
+    return `<tr>
+      <td>${b.match_info}</td>
+      <td>${typeLabel[b.odds_type] || b.odds_type}</td>
+      <td>${label}</td>
+      <td>${b.odds_taken.toFixed(2)}</td>
+      <td>¥${b.stake.toFixed(0)}</td>
+      <td><span class="badge ${resultClass}">${resultLabel}</span></td>
+      <td class="${profitClass}">${b.result==='待定' ? '--' : (b.profit>=0?'+':'')+'¥'+b.profit.toFixed(2)}</td>
+      <td>${canDelete ? `<button class="btn btn-sm btn-danger" onclick="deleteBet(${b.id})">删</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteBet(id) {
+  if (!confirm('确认删除？')) return;
+  await fetch(API + '/api/manual/bets/' + id, { method: 'DELETE' });
+  loadBets();
+  loadBankroll();
+  loadMatches();
+}
+
+// ── 初始化 ────────────────────────────────────────────
+
+loadBankroll();
+loadMatches();
+loadBets();
+</script>
+</body>
+</html>
