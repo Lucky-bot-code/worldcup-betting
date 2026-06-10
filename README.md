@@ -111,8 +111,48 @@ python main.py
 3. 填入当前赔率，点击"分析"
 4. 五信号和动量策略各给出推荐（或观望），用户据此到手动投注页面下注
 
+## 云服务器部署
+
+系统已部署到阿里云服务器：**http://116.62.152.64:8000**
+
+### 服务器信息
+
+- IP: 116.62.152.64
+- 系统: Alibaba Cloud Linux 3
+- Python: /usr/local/bin/python3.11
+- 项目路径: /opt/worldcup-betting
+- 服务名: worldcup.service
+
+### 常用命令
+
+```bash
+ssh root@116.62.152.64
+
+# 服务管理
+systemctl status worldcup     # 查看状态
+systemctl restart worldcup    # 重启服务
+journalctl -u worldcup -f     # 实时日志
+```
+
+### 本地更新代码后同步到云端
+
+由于服务器无法直接访问 GitHub，使用 SCP 同步：
+
+```bash
+# 在本地项目目录执行，自动上传修改过的文件并重启服务
+python3 sync_to_server.py
+```
+
+同步脚本会：
+1. 上传所有 .py / .html / .txt / .yaml / .sh 文件
+2. 安装新的 Python 依赖（如有）
+3. 重启 worldcup 服务
+
+> 如果数据库结构有变更（新增表/字段），需要手动在服务器上执行 ALTER TABLE 或重建数据库。
+
 ## 技术栈
 
 - **后端**: FastAPI + SQLAlchemy + SQLite
 - **前端**: 原生 HTML/JS + Chart.js
 - **数据**: Bet365 赔率（2010-2022，共240场）
+- **部署**: Alibaba Cloud Linux 3 + systemd

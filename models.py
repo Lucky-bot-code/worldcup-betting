@@ -1,3 +1,11 @@
+import sys
+# Fallback for Python builds without _sqlite3 C extension
+try:
+    import sqlite3  # noqa
+except ModuleNotFoundError:
+    import pysqlite3  # noqa
+    sys.modules["sqlite3"] = pysqlite3
+
 from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Float, DateTime, ForeignKey, create_engine, text,
