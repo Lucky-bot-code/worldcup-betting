@@ -656,6 +656,16 @@ def smart_context():
     return get_context_info()
 
 
+# ─── 竞彩赔率刷新 ──────────────────────────────────────────────
+
+@app.post("/api/odds/refresh")
+def refresh_odds():
+    """从 500.com 刷新竞彩实时赔率"""
+    from scraper.sporttery import update_manual_matches
+    result = update_manual_matches()
+    return result
+
+
 # ─── 静态资源 ──────────────────────────────────────────────────
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")

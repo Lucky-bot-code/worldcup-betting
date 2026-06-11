@@ -73,7 +73,11 @@ python main.py
 │   ├── five_signal.py   # 五信号动态统计
 │   ├── momentum.py      # 锦标赛动量
 │   └── ...              # 其他7个基准策略
-├── scraper/             # 历史赔率爬虫
+├── scraper/             # 赔率爬虫
+│   ├── worldcup.py       # 世界杯比赛数据（合成赔率）
+│   ├── oddsportal.py     # OddsPortal 历史赔率
+│   ├── betexplorer.py    # BetExplorer 真实赔率
+│   └── sporttery.py      # 竞彩实时赔率（500.com）
 └── static/              # 前端页面
     ├── index.html       # 回测系统
     ├── manual.html      # 手动投注
@@ -97,12 +101,16 @@ python main.py
 - `GET /api/smart/context` — 当前统计窗口
 - `POST /api/smart/recommend` — 获取策略推荐
 
+### 赔率刷新
+- `POST /api/odds/refresh` — 从 500.com 抓取最新竞彩 SPF 赔率，自动匹配数据库比赛
+
 ## 手动投注使用流程
 
-1. 在页面左侧添加比赛（或使用预导入的2026世界杯赛程）
-2. 在右侧选择比赛，切换胜平负/总进球数/比分tab，填入赔率和方向
-3. 比赛结束后，点击"赛果"按钮录入比分（可选填赛前SPF赔率供智能分析）
-4. 系统自动结算盈亏，更新资金
+1. **获取赔率**：`POST /api/odds/refresh` 从 500.com 抓取竞彩实时 SPF 赔率，自动填入比赛
+2. 在页面左侧添加比赛（或使用预导入的2026世界杯赛程）
+3. 在右侧选择比赛，切换胜平负/总进球数/比分tab，填入赔率和方向
+4. 比赛结束后，点击"赛果"按钮录入比分（可选填赛前SPF赔率供智能分析）
+5. 系统自动结算盈亏，更新资金
 
 ## 智能下注使用流程
 
