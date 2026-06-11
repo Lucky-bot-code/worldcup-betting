@@ -15,14 +15,19 @@ class MatchContext:
     odds_away: float
     score_home: int | None = None   # 回测中已知，仅 on_result 使用
     score_away: int | None = None   # decide() 不应依赖此字段（前瞻偏差）
+    # 多维度赔率（竞彩支持）
+    goals_odds: dict[str, float] = field(default_factory=dict)   # {"0": 8.5, "1": 4.2, ... "5": 12.0}
+    score_odds: dict[str, float] = field(default_factory=dict)   # {"1:0": 6.5, "2:1": 8.0, ...}
 
 
 @dataclass
 class BetDecision:
-    bet_on: str       # home / draw / away
-    stake: float      # 投注金额
-    odds: float       # 所取赔率
+    bet_type: str = "spf"  # spf / goals / score
+    bet_on: str = ""       # home/draw/away / "0"~"5" / "1:0"等
+    stake: float = 0.0     # 投注金额
+    odds: float = 0.0      # 所取赔率
     confidence: float = 0.0  # 信心度 0~1
+    reason: str = ""       # 触发原因简述
 
 
 class BaseStrategy:

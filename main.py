@@ -1,18 +1,12 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 from typing import Optional
 import os
 
-from models import init_db, get_session, Match, Odds, Bet, BacktestRun
-from models import ManualMatch, ManualBet, ManualBankroll
-from config import DEFAULT_BANKROLL, DEFAULT_STAKE
-from scraper.worldcup import scrape_all
-from backtest import run_backtest, BacktestResult
+from models import init_db, get_session, ManualMatch, ManualBet, ManualBankroll
 from smart_betting import get_recommendations, get_context_info
-from sqlalchemy import func, desc
-
+from sqlalchemy import desc
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,7 +15,7 @@ async def lifespan(app: FastAPI):
     session = get_session()
     try:
         if session.query(ManualBankroll).count() == 0:
-            session.add(ManualBankroll(initial_bankroll=10000.0, current_bankroll=10000.0))
+            session.add(ManualBankroll(initial_bankroll=3000.0, current_bankroll=3000.0))
             session.commit()
     finally:
         session.close()
@@ -31,265 +25,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="世界杯彩票盈利系统", lifespan=lifespan)
 
 
-# ─── API Schemas ──────────────────────────────────────────────
-
-STAGE_GROUPS = {
-    "全部": None,
-    "小组赛": ["小组赛"],
-    "淘汰赛": ["16强", "8强", "半决赛", "季军赛", "决赛"],
-}
-
-
-class BacktestRequest(BaseModel):
-    strategy_name: str
-    start_year: int
-    end_year: int
-    stage: str = "全部"
-    initial_bankroll: float = DEFAULT_BANKROLL
-    stake_per_bet: float = DEFAULT_STAKE
-
-
-class ScrapeRequest(BaseModel):
-    years: Optional[list[int]] = None
-
-
-# ─── 数据接口 ──────────────────────────────────────────────────
-
-@app.get("/api/matches")
-def get_matches(
-    year: Optional[int] = Query(None),
-    stage: Optional[str] = Query(None),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=200),
-):
-    session = get_session()
-    try:
-        q = session.query(Match)
-        if year:
-            q = q.filter(Match.year == year)
-        if stage:
-            q = q.filter(Match.stage == stage)
-        total = q.count()
-        matches = (
-            q.order_by(Match.year.desc(), Match.id)
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-            .all()
-        )
-        return {
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-            "data": [
-                {
-                    "id": m.id,
-                    "year": m.year,
-                    "stage": m.stage,
-                    "team_home": m.team_home,
-                    "team_away": m.team_away,
-                    "score_home": m.score_home,
-                    "score_away": m.score_away,
-                }
-                for m in matches
-            ],
-        }
-    finally:
-        session.close()
-
-
-@app.get("/api/matches/count")
-def get_match_count():
-    session = get_session()
-    try:
-        total = session.query(Match).count()
-        years = sorted(
-            [r[0] for r in session.query(Match.year).distinct().all()]
-        )
-        return {"total": total, "years": years}
-    finally:
-        session.close()
-
-
-@app.get("/api/odds/{match_id}")
-def get_odds(match_id: int):
-    session = get_session()
-    try:
-        odds = session.query(Odds).filter(Odds.match_id == match_id).all()
-        return {
-            "match_id": match_id,
-            "data": [
-                {
-                    "provider": o.provider,
-                    "odds_home": o.odds_home,
-                    "odds_draw": o.odds_draw,
-                    "odds_away": o.odds_away,
-                }
-                for o in odds
-            ],
-        }
-    finally:
-        session.close()
-
-
-# ─── 爬虫触发 ──────────────────────────────────────────────────
-
-@app.post("/api/scrape")
-async def trigger_scrape(req: ScrapeRequest = None):
-    years = req.years if req and req.years else None
-    result = await scrape_all(years)
-    return result
-
-
-# ─── 回测接口 ──────────────────────────────────────────────────
-
-@app.post("/api/backtest/run")
-def run_backtest_api(req: BacktestRequest):
-    try:
-        result: BacktestResult = run_backtest(
-            strategy_name=req.strategy_name,
-            start_year=req.start_year,
-            end_year=req.end_year,
-            stage=req.stage,
-            initial_bankroll=req.initial_bankroll,
-            stake_per_bet=req.stake_per_bet,
-        )
-        return {
-            "run_id": result.run_id,
-            "summary": {
-                "stage": req.stage,
-                "initial_bankroll": result.initial_bankroll,
-                "final_bankroll": result.final_bankroll,
-                "total_return": result.total_return,
-                "total_bets": result.total_bets,
-                "wins": result.wins,
-                "pushes": result.pushes,
-                "win_rate": result.win_rate,
-                "max_drawdown": result.max_drawdown,
-            },
-            "equity_curve": result.equity_curve,
-        }
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.get("/api/backtest/bets")
-def get_backtest_bets(
-    run_id: int = Query(...),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=200),
-):
-    session = get_session()
-    try:
-        q = session.query(Bet).filter(Bet.run_id == run_id)
-        total = q.count()
-        bets = (
-            q.order_by(Bet.id)
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-            .all()
-        )
-        return {
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-            "data": [
-                {
-                    "id": b.id,
-                    "match_id": b.match_id,
-                    "strategy_name": b.strategy_name,
-                    "bet_on": b.bet_on,
-                    "stake": b.stake,
-                    "odds_taken": b.odds_taken,
-                    "result": b.result,
-                    "profit": b.profit,
-                    "match_info": _match_label(session, b.match_id),
-                }
-                for b in bets
-            ],
-        }
-    finally:
-        session.close()
-
-
-def _match_label(session, match_id):
-    m = session.get(Match, match_id)
-    if m:
-        return f"{m.year} {m.team_home} vs {m.team_away} ({m.score_home}-{m.score_away})"
-    return ""
-
-
-@app.get("/api/backtest/summary/{run_id}")
-def get_backtest_summary(run_id: int):
-    session = get_session()
-    try:
-        run = session.get(BacktestRun, run_id)
-        if not run:
-            raise HTTPException(status_code=404, detail="回测记录不存在")
-        return {
-            "id": run.id,
-            "strategy_name": run.strategy_name,
-            "stage": run.stage,
-            "start_year": run.start_year,
-            "end_year": run.end_year,
-            "initial_bankroll": run.initial_bankroll,
-            "final_bankroll": run.final_bankroll,
-            "total_return": run.total_return,
-            "total_bets": run.total_bets,
-            "wins": run.wins,
-            "pushes": run.pushes,
-            "win_rate": run.win_rate,
-            "max_drawdown": run.max_drawdown,
-            "created_at": run.created_at.isoformat(),
-        }
-    finally:
-        session.close()
-
-
-@app.get("/api/backtest/runs")
-def get_backtest_runs():
-    session = get_session()
-    try:
-        runs = session.query(BacktestRun).order_by(desc(BacktestRun.created_at)).limit(50).all()
-        return {
-            "data": [
-                {
-                    "id": r.id,
-                    "strategy_name": r.strategy_name,
-                    "total_return": r.total_return,
-                    "total_bets": r.total_bets,
-                    "win_rate": r.win_rate,
-                    "created_at": r.created_at.isoformat(),
-                }
-                for r in runs
-            ]
-        }
-    finally:
-        session.close()
-
-
-@app.get("/api/strategies")
-def get_strategies():
-    return {
-        "strategies": [
-            {"key": "five_signal", "name": "五信号动态统计", "description": "12场滚动窗口+五级阈值，爆冷率/平局率/小球率独立均值回归"},
-            {"key": "momentum", "name": "锦标赛动量", "description": "统计前N场冷门率，与基线偏离时反向押注均值回归"},
-            {"key": "favorite", "name": "买强队", "description": "每场买赔率最低的选项"},
-            {"key": "strong_favorite", "name": "深盘强队", "description": "只买赔率<1.45的深盘强队，跳过模糊比赛"},
-            {"key": "draw_hunter", "name": "平局猎人", "description": "小组赛双方实力接近时买平局"},
-            {"key": "knockout_underdog", "name": "淘汰赛下盘", "description": "淘汰赛买赔率更高的下盘方"},
-            {"key": "odds_range", "name": "赔率区间", "description": "只在赔率1.5~2.2区间内选最优"},
-            {"key": "value_bet", "name": "价值投注", "description": "估算真实概率，只在期望值>5%时下注"},
-            {"key": "kelly", "name": "凯利公式", "description": "凯利公式动态调整注额"},
-        ]
-    }
-
-
 # ─── 手动投注系统 ──────────────────────────────────────────────
 
 def _get_bankroll(session) -> ManualBankroll:
     br = session.query(ManualBankroll).first()
     if not br:
-        br = ManualBankroll(initial_bankroll=10000.0, current_bankroll=10000.0)
+        br = ManualBankroll(initial_bankroll=3000.0, current_bankroll=3000.0)
         session.add(br)
         session.flush()
     return br
@@ -308,9 +49,11 @@ def _settle_spf(bet: ManualBet, score_home: int, score_away: int):
 
 def _settle_over_under(bet: ManualBet, score_home: int, score_away: int):
     total = score_home + score_away
-    direction = bet.bet_direction  # "0", "1", "2", "3", "4", "5+"
-    if direction == "5+":
-        won = total >= 5
+    direction = bet.bet_direction  # "0"~"6", "7+", "5+"(legacy)
+    if direction == "7+":
+        won = total >= 7
+    elif direction == "5+":
+        won = total >= 5  # legacy
     else:
         try:
             won = total == int(direction)
@@ -415,6 +158,25 @@ def create_manual_match(data: dict):
         session.close()
 
 
+@app.get("/api/manual/matches/{match_id}")
+def get_manual_match(match_id: int):
+    session = get_session()
+    try:
+        m = session.get(ManualMatch, match_id)
+        if not m:
+            raise HTTPException(status_code=404, detail="比赛不存在")
+        return {
+            "id": m.id, "match_day": m.match_day, "stage": m.stage,
+            "team_home": m.team_home, "team_away": m.team_away,
+            "score_home": m.score_home, "score_away": m.score_away,
+            "odds_home": m.odds_home, "odds_draw": m.odds_draw, "odds_away": m.odds_away,
+            "goals_odds_json": m.goals_odds_json, "score_odds_json": m.score_odds_json,
+            "is_settled": m.is_settled,
+        }
+    finally:
+        session.close()
+
+
 @app.put("/api/manual/matches/{match_id}")
 def update_manual_match(match_id: int, data: dict):
     session = get_session()
@@ -422,12 +184,16 @@ def update_manual_match(match_id: int, data: dict):
         m = session.get(ManualMatch, match_id)
         if not m:
             raise HTTPException(status_code=404, detail="比赛不存在")
-        for field in ["match_day", "stage", "team_home", "team_away"]:
+        for field in ["match_day", "stage", "team_home", "team_away",
+                       "odds_home", "odds_draw", "odds_away",
+                       "goals_odds_json", "score_odds_json"]:
             if field in data:
                 setattr(m, field, data[field])
         session.commit()
         return {"id": m.id, "match_day": m.match_day, "stage": m.stage,
-                "team_home": m.team_home, "team_away": m.team_away}
+                "team_home": m.team_home, "team_away": m.team_away,
+                "odds_home": m.odds_home, "odds_draw": m.odds_draw, "odds_away": m.odds_away,
+                "goals_odds_json": m.goals_odds_json, "score_odds_json": m.score_odds_json}
     finally:
         session.close()
 
@@ -635,13 +401,16 @@ def set_manual_bankroll(data: dict):
 
 @app.post("/api/smart/recommend")
 def smart_recommend(data: dict):
-    """根据已结算比赛统计，为当前比赛推荐下注方向"""
+    """根据已结算比赛统计，为当前比赛推荐多维度下注方向"""
     try:
         result = get_recommendations(
             match_id=int(data["match_id"]),
             odds_home=float(data["odds_home"]),
-            odds_draw=float(data["odds_draw"]),
+            odds_draw=float(data.get("odds_draw", 3.0)),
             odds_away=float(data["odds_away"]),
+            goals_odds=data.get("goals_odds", {}),
+            score_odds=data.get("score_odds", {}),
+            bankroll=float(data.get("bankroll", 3000)),
         )
         return result
     except KeyError as e:
@@ -660,32 +429,34 @@ def smart_context():
 
 @app.post("/api/odds/refresh")
 def refresh_odds():
-    """从 500.com 刷新竞彩实时赔率"""
+    """从 500.com 抓取竞彩实时赔率（SPF + 总进球 + 比分）"""
     from scraper.sporttery import update_manual_matches
-    result = update_manual_matches()
-    return result
+    return update_manual_matches()
 
 
 # ─── 静态资源 ──────────────────────────────────────────────────
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
+# 禁用浏览器缓存
+_HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate"}
+
 @app.get("/")
 async def root():
     from fastapi.responses import FileResponse
-    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"), headers=_HEADERS)
 
 
 @app.get("/manual")
 async def manual_page():
     from fastapi.responses import FileResponse
-    return FileResponse(os.path.join(STATIC_DIR, "manual.html"))
+    return FileResponse(os.path.join(STATIC_DIR, "manual.html"), headers=_HEADERS)
 
 
 @app.get("/smart")
 async def smart_page():
     from fastapi.responses import FileResponse
-    return FileResponse(os.path.join(STATIC_DIR, "smart.html"))
+    return FileResponse(os.path.join(STATIC_DIR, "smart.html"), headers=_HEADERS)
 
 
 if os.path.isdir(STATIC_DIR):

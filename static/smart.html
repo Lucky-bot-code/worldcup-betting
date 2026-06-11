@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>智能下注 - 世界杯彩票盈利系统</title>
+<title>智能分析 - 世界杯彩票盈利系统</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, 'Microsoft YaHei', sans-serif; background: #0f1923; color: #e0e0e0; min-height: 100vh; }
@@ -13,36 +13,68 @@ body { font-family: -apple-system, 'Microsoft YaHei', sans-serif; background: #0
 .nav a { padding: 6px 16px; border-radius: 6px; color: #aaa; text-decoration: none; font-size: .85rem; background: #1a2a38; border: 1px solid #2a3a48; }
 .nav a.active { background: #2c5f2d; color: #fff; border-color: #2c5f2d; }
 .nav a:hover { border-color: #3a8a3a; }
-.main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px 40px; }
-.card { background: #1a2a38; border-radius: 10px; padding: 20px; border: 1px solid #2a3a48; }
+
+.main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+/* Phase banner */
+.phase-banner { padding: 14px 20px; border-radius: 10px; margin-bottom: 16px; font-weight: bold; font-size: .95rem; text-align: center; }
+.phase-banner.observing { background: #1a3a5c; border: 1px solid #2980b9; color: #85c1e9; }
+.phase-banner.betting { background: #1a3c1a; border: 1px solid #3a8a3a; color: #82e0aa; }
+
+/* Context card */
+.card { background: #1a2a38; border-radius: 10px; padding: 20px; border: 1px solid #2a3a48; margin-bottom: 16px; }
 .card h3 { color: #ffd700; margin-bottom: 14px; font-size: .95rem; }
-.full-width { grid-column: 1 / -1; }
-.context-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px; }
-.ctx-item { background: #0f1923; border-radius: 8px; padding: 10px; text-align: center; }
-.ctx-item .val { font-size: 1.3rem; font-weight: bold; color: #ffd700; }
-.ctx-item .lbl { font-size: .7rem; color: #888; margin-top: 2px; }
-.ctx-item .alert { color: #f44336; }
-.form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+.dual-window { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.window-box { background: #0f1923; border-radius: 8px; padding: 12px; }
+.window-box h4 { font-size: .8rem; color: #aaa; margin-bottom: 8px; }
+.rate-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: .8rem; border-bottom: 1px solid #1a2a38; }
+.rate-row .lbl { color: #888; }
+.rate-row .val { color: #e0e0e0; font-weight: bold; }
+.rate-row .val.hi { color: #f44336; }
+.rate-row .val.lo { color: #4caf50; }
+
+.goal-bars { display: flex; gap: 4px; margin-top: 6px; align-items: flex-end; }
+.goal-bar-wrap { flex: 1; text-align: center; }
+.goal-bar-fill { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; transition: height .3s; }
+.goal-bar-lbl { font-size: .65rem; color: #888; margin-top: 2px; }
+
+/* Input Section */
+.form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
 .form-row label { font-size: .78rem; color: #aaa; display: block; margin-bottom: 2px; }
 .form-row input, .form-row select { padding: 8px 10px; border-radius: 6px; border: 1px solid #3a3a3a; background: #0f1923; color: #fff; font-size: .85rem; }
 .form-row select { min-width: 260px; }
+input.small { width: 90px; }
 .btn { padding: 9px 20px; border-radius: 6px; border: 1px solid #3a8a3a; background: #2c5f2d; color: #fff; cursor: pointer; font-size: .9rem; font-weight: bold; }
 .btn:hover { background: #3a8a3a; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.recommend-card { background: #0f1923; border-radius: 10px; padding: 16px; border: 1px solid #2a3a48; }
-.recommend-card .strat-name { font-size: .8rem; color: #888; margin-bottom: 8px; }
-.recommend-card .action { font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
-.recommend-card .action.bet { color: #4caf50; }
-.recommend-card .action.skip { color: #888; }
-.recommend-card .detail { font-size: .82rem; color: #aaa; line-height: 1.6; }
-.recommend-card .detail span { color: #ffd700; }
-.recommend-card .reason { margin-top: 10px; padding: 8px 10px; background: #1a2a38; border-radius: 6px; font-size: .78rem; color: #999; line-height: 1.5; }
-.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-.metric-item { background: #1a2a38; border-radius: 6px; padding: 8px; text-align: center; }
-.metric-item .val { font-size: 1rem; font-weight: bold; }
-.metric-item .lbl { font-size: .7rem; color: #888; }
-.positive { color: #4caf50; }
-.negative { color: #f44336; }
+.btn-sm { padding: 5px 12px; font-size: .78rem; border-radius: 5px; cursor: pointer; border: 1px solid #555; background: #0f1923; color: #aaa; }
+.btn-sm:hover { border-color: #ffd700; color: #ffd700; }
+.odds-section { margin-top: 8px; padding: 10px; background: #0f1923; border-radius: 8px; display: none; }
+.odds-section h4 { font-size: .8rem; color: #aaa; margin-bottom: 6px; }
+
+/* Recommendations */
+.rec-list { display: flex; flex-direction: column; gap: 10px; }
+.rec-item { background: #0f1923; border-radius: 10px; padding: 14px 16px; border: 1px solid #2a3a48; display: grid; grid-template-columns: 80px 1fr auto; gap: 14px; align-items: center; }
+.rec-item.spf { border-left: 3px solid #4caf50; }
+.rec-item.goals { border-left: 3px solid #2196f3; }
+.rec-item.score { border-left: 3px solid #ff9800; }
+.rec-type { font-size: .7rem; color: #888; text-transform: uppercase; }
+.rec-bet { font-size: 1.1rem; font-weight: bold; }
+.rec-bet.spf-c { color: #4caf50; }
+.rec-bet.goals-c { color: #2196f3; }
+.rec-bet.score-c { color: #ff9800; }
+.rec-meta { text-align: right; font-size: .8rem; }
+.rec-meta .odds { font-size: 1.1rem; font-weight: bold; color: #ffd700; }
+.rec-meta .stake { color: #aaa; }
+.rec-meta .conf { font-size: .75rem; color: #888; }
+.rec-reason { grid-column: 1 / -1; font-size: .78rem; color: #999; padding: 6px 10px; background: #1a2a38; border-radius: 5px; margin-top: 4px; }
+.no-rec { text-align: center; color: #666; padding: 20px; font-size: .9rem; }
+
+/* Staking info */
+.stake-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+.stake-item { background: #0f1923; border-radius: 6px; padding: 8px; text-align: center; }
+.stake-item .val { font-size: 1rem; font-weight: bold; color: #ffd700; }
+.stake-item .lbl { font-size: .7rem; color: #888; }
 </style>
 </head>
 <body>
@@ -50,27 +82,40 @@ body { font-family: -apple-system, 'Microsoft YaHei', sans-serif; background: #0
 <div class="header">
   <h1>世界杯彩票盈利系统</h1>
   <div class="nav">
-    <a href="/">回测系统</a>
     <a href="/manual">手动投注</a>
-    <a href="/smart" class="active">智能下注</a>
+    <a href="/smart" class="active">智能分析</a>
   </div>
 </div>
 
 <div class="main">
+  <!-- Phase Banner -->
+  <div class="phase-banner observing" id="phaseBanner">
+    观察期 — 前 12 场只统计数据，不下注
+  </div>
+
   <!-- 统计上下文 -->
-  <div class="card full-width">
-    <h3>实时统计窗口 <span style="color:#888;font-weight:normal;font-size:.8rem;" id="contextMeta"></span></h3>
-    <div class="context-grid" id="contextGrid">
-      <div class="ctx-item"><div class="val" id="ctxSettled">0</div><div class="lbl">已结算场次</div></div>
-      <div class="ctx-item"><div class="val" id="ctxUpset">--</div><div class="lbl">12场冷门率</div></div>
-      <div class="ctx-item"><div class="val" id="ctxDraw">--</div><div class="lbl">12场平局率</div></div>
-      <div class="ctx-item"><div class="val" id="ctxUnder">--</div><div class="lbl">12场小球率</div></div>
-      <div class="ctx-item"><div class="val" id="ctxPhase">--</div><div class="lbl">动量策略状态</div></div>
+  <div class="card">
+    <h3>双窗口统计 (全赛累计 / 12场滚动)</h3>
+    <div class="dual-window">
+      <div class="window-box">
+        <h4>全赛累计 (<span id="fullN">0</span> 场)</h4>
+        <div class="rate-row"><span class="lbl">冷门率</span><span class="val" id="fullUpset">--</span></div>
+        <div class="rate-row"><span class="lbl">平局率</span><span class="val" id="fullDraw">--</span></div>
+        <span style="font-size:.7rem;color:#666;">进球分布</span>
+        <div class="goal-bars" id="fullGoals"></div>
+      </div>
+      <div class="window-box">
+        <h4>12场滚动 (<span id="rollN">0</span> 场)</h4>
+        <div class="rate-row"><span class="lbl">冷门率</span><span class="val" id="rollUpset">--</span></div>
+        <div class="rate-row"><span class="lbl">平局率</span><span class="val" id="rollDraw">--</span></div>
+        <span style="font-size:.7rem;color:#666;">进球分布</span>
+        <div class="goal-bars" id="rollGoals"></div>
+      </div>
     </div>
   </div>
 
   <!-- 分析输入 -->
-  <div class="card full-width">
+  <div class="card">
     <h3>推荐分析</h3>
     <div class="form-row">
       <div>
@@ -79,62 +124,124 @@ body { font-family: -apple-system, 'Microsoft YaHei', sans-serif; background: #0
       </div>
       <div>
         <label>主胜赔率</label>
-        <input type="number" id="smartHome" step="0.01" min="1.01" style="width:100px">
+        <input type="number" id="smartHome" step="0.01" min="1.01" class="small">
       </div>
       <div>
         <label>平局赔率</label>
-        <input type="number" id="smartDraw" step="0.01" min="1.01" style="width:100px">
+        <input type="number" id="smartDraw" step="0.01" min="1.01" class="small">
       </div>
       <div>
         <label>客胜赔率</label>
-        <input type="number" id="smartAway" step="0.01" min="1.01" style="width:100px">
+        <input type="number" id="smartAway" step="0.01" min="1.01" class="small">
+      </div>
+      <div>
+        <label>当前资金</label>
+        <input type="number" id="smartBankroll" step="100" min="100" value="3000" class="small">
       </div>
       <button class="btn" id="analyzeBtn" onclick="analyze()">分析</button>
+    </div>
+    <button class="btn-sm" onclick="toggleOdds()">+ 总进球/比分赔率</button>
+    <div class="odds-section" id="oddsSection">
+      <h4>总进球赔率</h4>
+      <div class="form-row">
+        <div><label>0球</label><input type="number" id="go0" step="0.01" min="1.01" class="small"></div>
+        <div><label>1球</label><input type="number" id="go1" step="0.01" min="1.01" class="small"></div>
+        <div><label>2球</label><input type="number" id="go2" step="0.01" min="1.01" class="small"></div>
+        <div><label>3球</label><input type="number" id="go3" step="0.01" min="1.01" class="small"></div>
+        <div><label>4球</label><input type="number" id="go4" step="0.01" min="1.01" class="small"></div>
+        <div><label>5球</label><input type="number" id="go5" step="0.01" min="1.01" class="small"></div>
+        <div><label>6球</label><input type="number" id="go6" step="0.01" min="1.01" class="small"></div>
+        <div><label>7+球</label><input type="number" id="go7" step="0.01" min="1.01" class="small"></div>
+      </div>
+      <h4 style="margin-top:8px;">比分赔率 (Tier A+B)</h4>
+      <div class="form-row">
+        <div><label>0:1</label><input type="number" id="sc0_1" step="0.01" min="1.01" class="small"></div>
+        <div><label>1:2</label><input type="number" id="sc1_2" step="0.01" min="1.01" class="small"></div>
+        <div><label>1:0</label><input type="number" id="sc1_0" step="0.01" min="1.01" class="small"></div>
+        <div><label>0:0</label><input type="number" id="sc0_0" step="0.01" min="1.01" class="small"></div>
+        <div><label>2:1</label><input type="number" id="sc2_1" step="0.01" min="1.01" class="small"></div>
+        <div><label>1:1</label><input type="number" id="sc1_1" step="0.01" min="1.01" class="small"></div>
+        <div><label>2:0</label><input type="number" id="sc2_0" step="0.01" min="1.01" class="small"></div>
+        <div><label>0:2</label><input type="number" id="sc0_2" step="0.01" min="1.01" class="small"></div>
+      </div>
     </div>
   </div>
 
   <!-- 推荐结果 -->
-  <div class="card" id="fiveCard">
-    <div class="strat-name">策略: 五信号动态统计</div>
-    <div class="action skip" id="fiveAction">等待分析...</div>
-    <div class="detail" id="fiveDetail" style="display:none;">
-      <div class="metrics">
-        <div class="metric-item"><div class="val" id="fiveConf">--</div><div class="lbl">置信度</div></div>
-        <div class="metric-item"><div class="val" id="fiveMult">--</div><div class="lbl">注额倍数</div></div>
-        <div class="metric-item"><div class="val" id="fiveOdds">--</div><div class="lbl">推荐赔率</div></div>
-      </div>
+  <div class="card">
+    <h3>策略分析 (均值回归) <span style="font-weight:normal;font-size:.75rem;color:#888;">— 仅供参考，请到手动投注页面下注</span></h3>
+    <div id="oddsWarning" style="display:none;padding:8px 12px;background:#3a3a1a;border:1px solid #ffd700;border-radius:6px;margin-bottom:10px;font-size:.8rem;color:#ffd700;"></div>
+    <div id="recContainer">
+      <div class="no-rec">选择比赛并填入赔率后点击「分析」</div>
     </div>
-    <div class="reason" id="fiveReason">选择比赛并填入赔率后点击分析</div>
-  </div>
-
-  <div class="card" id="momentumCard">
-    <div class="strat-name">策略: 锦标赛动量</div>
-    <div class="action skip" id="moAction">等待分析...</div>
-    <div class="detail" id="moDetail" style="display:none;">
-      <div class="metrics">
-        <div class="metric-item"><div class="val" id="moConf">--</div><div class="lbl">置信度</div></div>
-        <div class="metric-item"><div class="val" id="moOdds">--</div><div class="lbl">推荐赔率</div></div>
-      </div>
+    <div style="text-align:center;margin-top:12px;">
+      <a href="/manual" class="btn" style="display:inline-block;text-decoration:none;">去手动投注页面下注</a>
     </div>
-    <div class="reason" id="moReason">选择比赛并填入赔率后点击分析</div>
+    <div class="stake-info" id="stakeInfo" style="display:none;">
+      <div class="stake-item"><div class="val" id="siBudget">¥3000</div><div class="lbl">总预算</div></div>
+      <div class="stake-item"><div class="val" id="siTarget">¥100</div><div class="lbl">每次目标盈利</div></div>
+      <div class="stake-item"><div class="val" id="siMax">¥60</div><div class="lbl">单注上限 (2%)</div></div>
+      <div class="stake-item"><div class="val" id="siMin">¥3</div><div class="lbl">单注下限 (0.1%)</div></div>
+    </div>
   </div>
 </div>
 
 <script>
 const API = '';
 
+// ─── Load Context ────────────────────────────────────────────────
+
 async function loadContext() {
   const resp = await fetch(API + '/api/smart/context');
   const ctx = await resp.json();
-  document.getElementById('ctxSettled').textContent = ctx.settled_count;
-  document.getElementById('ctxUpset').textContent = (ctx.upset_rate * 100).toFixed(0) + '%';
-  document.getElementById('ctxUpset').className = 'val' + (ctx.upset_rate > 0.25 ? ' alert' : '');
-  document.getElementById('ctxDraw').textContent = (ctx.draw_rate * 100).toFixed(0) + '%';
-  document.getElementById('ctxDraw').className = 'val' + (ctx.draw_rate > 0.25 ? ' alert' : '');
-  document.getElementById('ctxUnder').textContent = (ctx.under_rate * 100).toFixed(0) + '%';
-  document.getElementById('ctxPhase').textContent = {observing:'观察中',bet_fav:'押热门',bet_dog:'押下盘',skip:'观望'}[ctx.momentum_phase] || ctx.momentum_phase;
-  document.getElementById('contextMeta').textContent = `窗口${ctx.window_size}场 · 动量: ${ctx.momentum_phase}`;
+
+  const phase = ctx.phase || 'observing';
+  const banner = document.getElementById('phaseBanner');
+  banner.className = 'phase-banner ' + phase;
+  if (phase === 'observing') {
+    banner.textContent = `观察期 — 已统计 ${ctx.observed_count || 0} / ${ctx.observe_target || 12} 场，仅收集统计数据`;
+  } else {
+    banner.textContent = `下注期 — 已统计 ${ctx.observed_count || 0} 场，策略开始输出推荐`;
+  }
+
+  const full = ctx.full_window || {};
+  const roll = ctx.rolling_window || {};
+
+  document.getElementById('fullN').textContent = full.n || 0;
+  document.getElementById('fullUpset').textContent = ((full.upset_rate || 0) * 100).toFixed(0) + '%';
+  document.getElementById('fullDraw').textContent = ((full.draw_rate || 0) * 100).toFixed(0) + '%';
+
+  document.getElementById('rollN').textContent = roll.n || 0;
+  document.getElementById('rollUpset').textContent = ((roll.upset_rate || 0) * 100).toFixed(0) + '%';
+  document.getElementById('rollDraw').textContent = ((roll.draw_rate || 0) * 100).toFixed(0) + '%';
+
+  // Goal bars
+  const baselines = ctx.baselines?.goals || {};
+  renderGoalBars('fullGoals', full.goal_rates || {}, baselines);
+  renderGoalBars('rollGoals', roll.goal_rates || {}, baselines);
 }
+
+function renderGoalBars(containerId, rates, baselines) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  for (let g = 0; g <= 5; g++) {
+    const rate = rates[String(g)] || 0;
+    const base = baselines[String(g)] || 0.05;
+    const pct = Math.max(rate * 100, 1);
+    const basePct = base * 100;
+    const isHigh = rate > base * 1.5;
+    const wrap = document.createElement('div');
+    wrap.className = 'goal-bar-wrap';
+    wrap.innerHTML = `
+      <div class="goal-bar-fill" style="height:${Math.max(pct * 2, 4)}px;background:${isHigh ? '#f44336' : '#3a8a3a'};${rate === 0 ? 'opacity:0.3' : ''}"></div>
+      <div class="goal-bar-lbl">${g === 5 ? '5+' : g}<br>${pct.toFixed(0)}%</div>
+    `;
+    wrap.title = `当前${pct.toFixed(0)}% / 基线${basePct.toFixed(0)}%`;
+    container.appendChild(wrap);
+  }
+}
+
+// ─── Load Matches ────────────────────────────────────────────────
 
 async function loadMatches() {
   const resp = await fetch(API + '/api/manual/matches?is_settled=0&page_size=200');
@@ -144,7 +251,54 @@ async function loadMatches() {
   data.data.forEach(m => {
     sel.add(new Option(`${m.match_day} [${m.stage}] ${m.team_home} vs ${m.team_away}`, m.id));
   });
+
+  // Auto-fill odds if available
+  sel.onchange = async function() {
+    const matchId = sel.value;
+    if (!matchId) return;
+    const resp = await fetch(API + '/api/manual/matches/' + matchId);
+    const m = await resp.json();
+    if (m.odds_home) document.getElementById('smartHome').value = m.odds_home;
+    if (m.odds_draw) document.getElementById('smartDraw').value = m.odds_draw;
+    if (m.odds_away) document.getElementById('smartAway').value = m.odds_away;
+
+    // Auto-fill goals odds
+    if (m.goals_odds_json) {
+      try {
+        const goals = JSON.parse(m.goals_odds_json);
+        for (let g = 0; g <= 7; g++) {
+          const el = document.getElementById('go' + g);
+          if (el && goals[String(g)]) el.value = goals[String(g)];
+        }
+      } catch(e) {}
+    }
+    // Auto-fill score odds
+    if (m.score_odds_json) {
+      try {
+        const scores = JSON.parse(m.score_odds_json);
+        for (const [sk, sv] of Object.entries(scores)) {
+          const el = document.getElementById('sc' + sk.replace(':', '_'));
+          if (el) el.value = sv;
+        }
+      } catch(e) {}
+    }
+    // Update bankroll
+    const brResp = await fetch(API + '/api/manual/bankroll');
+    const brData = await brResp.json();
+    if (brData.current_bankroll) {
+      document.getElementById('smartBankroll').value = Math.round(brData.current_bankroll);
+    }
+  };
 }
+
+// ─── Toggle Odds ─────────────────────────────────────────────────
+
+function toggleOdds() {
+  const sec = document.getElementById('oddsSection');
+  sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
+}
+
+// ─── Analyze ─────────────────────────────────────────────────────
 
 async function analyze() {
   const matchId = document.getElementById('smartMatch').value;
@@ -152,52 +306,98 @@ async function analyze() {
   const odds_home = parseFloat(document.getElementById('smartHome').value);
   const odds_draw = parseFloat(document.getElementById('smartDraw').value);
   const odds_away = parseFloat(document.getElementById('smartAway').value);
-  if (!odds_home || !odds_draw || !odds_away) { alert('请填入三项赔率'); return; }
+  if (!odds_home || !odds_draw || !odds_away) { alert('请填入三项SPF赔率'); return; }
+  const bankroll = parseFloat(document.getElementById('smartBankroll').value) || 3000;
+
+  // Collect goals odds
+  const goals_odds = {};
+  for (let g = 0; g <= 7; g++) {
+    const v = parseFloat(document.getElementById('go' + g).value);
+    if (v) goals_odds[String(g)] = v;
+  }
+
+  // Collect score odds
+  const score_odds = {};
+  const scoreIds = ['0:1','1:2','1:0','0:0','2:1','1:1','2:0','0:2'];
+  for (const sk of scoreIds) {
+    const el = document.getElementById('sc' + sk.replace(':', '_'));
+    if (el && el.value) score_odds[sk] = parseFloat(el.value);
+  }
+
+  // 赔率缺失警告
+  const warning = document.getElementById('oddsWarning');
+  const missing = [];
+  if (Object.keys(goals_odds).length === 0) missing.push('总进球赔率');
+  if (Object.keys(score_odds).length === 0) missing.push('比分赔率');
+  if (missing.length > 0) {
+    warning.style.display = 'block';
+    warning.textContent = `未填入${missing.join('和')}，相关维度将不产生推荐。点击「+ 总进球/比分赔率」展开填写。`;
+  } else {
+    warning.style.display = 'none';
+  }
 
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true; btn.textContent = '分析中...';
   try {
     const resp = await fetch(API + '/api/smart/recommend', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({match_id: parseInt(matchId), odds_home, odds_draw, odds_away})
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        match_id: parseInt(matchId),
+        odds_home, odds_draw, odds_away,
+        goals_odds, score_odds, bankroll
+      })
     });
     const r = await resp.json();
     if (r.error) { alert(r.error); return; }
 
-    // 五信号结果
-    const fs = r.five_signal;
-    const fiveAct = document.getElementById('fiveAction');
-    fiveAct.textContent = fs.action;
-    fiveAct.className = 'action ' + (fs.bet_on ? 'bet' : 'skip');
-    if (fs.bet_on) {
-      document.getElementById('fiveDetail').style.display = 'block';
-      document.getElementById('fiveConf').textContent = (fs.confidence * 100).toFixed(0) + '%';
-      document.getElementById('fiveMult').textContent = fs.stake_mult + 'x';
-      document.getElementById('fiveOdds').textContent = fs.odds ? fs.odds.toFixed(2) : '--';
-    } else {
-      document.getElementById('fiveDetail').style.display = 'none';
-    }
-    document.getElementById('fiveReason').textContent = fs.reason;
-
-    // 动量结果
-    const mo = r.momentum;
-    const moAct = document.getElementById('moAction');
-    moAct.textContent = mo.action;
-    moAct.className = 'action ' + (mo.bet_on ? 'bet' : 'skip');
-    if (mo.bet_on) {
-      document.getElementById('moDetail').style.display = 'block';
-      document.getElementById('moConf').textContent = (mo.confidence * 100).toFixed(0) + '%';
-      document.getElementById('moOdds').textContent = mo.odds ? mo.odds.toFixed(2) : '--';
-    } else {
-      document.getElementById('moDetail').style.display = 'none';
-    }
-    document.getElementById('moReason').textContent = mo.reason;
-
+    renderRecommendations(r);
+    renderStakeInfo(r.stake_params);
     loadContext();
   } finally {
     btn.disabled = false; btn.textContent = '分析';
   }
 }
+
+function renderRecommendations(r) {
+  const container = document.getElementById('recContainer');
+  const recs = r.recommendations || [];
+
+  if (recs.length === 0) {
+    container.innerHTML = '<div class="no-rec">当前无信号触发 — 所有维度均未达到强信号阈值</div>';
+    return;
+  }
+
+  let html = '<div class="rec-list">';
+  for (const rec of recs) {
+    const oddsStr = rec.odds ? '@' + rec.odds.toFixed(2) : '赔率未填';
+    const stakeStr = rec.stake ? '¥' + rec.stake.toFixed(0) : '';
+    html += `
+      <div class="rec-item ${rec.bet_type}">
+        <div class="rec-type">${rec.bet_type_label}</div>
+        <div class="rec-bet ${rec.bet_type}-c">${rec.bet_label} ${oddsStr}</div>
+        <div class="rec-meta">
+          <div class="odds">${stakeStr}</div>
+          <div class="stake">${rec.stake ? '等利润注额' : ''}</div>
+          <div class="conf">置信度 ${(rec.confidence * 100).toFixed(0)}%</div>
+        </div>
+        <div class="rec-reason">${rec.reason}</div>
+      </div>`;
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderStakeInfo(params) {
+  if (!params) return;
+  document.getElementById('stakeInfo').style.display = 'grid';
+  document.getElementById('siBudget').textContent = '¥' + (params.budget || 3000);
+  document.getElementById('siTarget').textContent = '¥' + (params.target_profit || 100);
+  const br = params.current_bankroll || 3000;
+  document.getElementById('siMax').textContent = '¥' + Math.round(br * (params.max_stake_ratio || 0.02));
+  document.getElementById('siMin').textContent = '¥' + Math.round(br * (params.min_stake_ratio || 0.001));
+}
+
+// ─── Init ────────────────────────────────────────────────────────
 
 loadContext();
 loadMatches();

@@ -4,258 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>世界杯彩票盈利系统</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, 'Microsoft YaHei', sans-serif; background: #0f1923; color: #e0e0e0; min-height: 100vh; }
-.header { background: linear-gradient(135deg, #1a3a5c, #0f1923); padding: 20px 40px; display: flex; align-items: center; gap: 20px; border-bottom: 2px solid #2c5f2d; }
-.header h1 { font-size: 1.5rem; color: #ffd700; white-space: nowrap; }
-.controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.controls select, .controls input, .controls button { padding: 8px 14px; border-radius: 6px; border: 1px solid #3a3a3a; background: #1a2a38; color: #fff; font-size: .9rem; }
-.controls button { background: #2c5f2d; border-color: #3a8a3a; cursor: pointer; font-weight: bold; }
-.controls button:hover { background: #3a8a3a; }
-.controls button:disabled { opacity: 0.5; cursor: not-allowed; }
-.main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px 40px; }
-.card { background: #1a2a38; border-radius: 10px; padding: 20px; border: 1px solid #2a3a48; }
-.card h3 { color: #ffd700; margin-bottom: 16px; font-size: 1rem; }
-.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-.metric { background: #0f1923; border-radius: 8px; padding: 14px; text-align: center; }
-.metric .value { font-size: 1.6rem; font-weight: bold; }
-.metric .label { font-size: .75rem; color: #888; margin-top: 4px; }
-.metric .positive { color: #4caf50; }
-.metric .negative { color: #f44336; }
-.chart-container { position: relative; height: 300px; width: 100%; }
-.full-width { grid-column: 1 / -1; }
-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-th { text-align: left; padding: 10px 8px; border-bottom: 2px solid #2a3a48; color: #aaa; }
-td { padding: 8px; border-bottom: 1px solid #1a2a38; }
-tr:hover td { background: #1e3040; }
-.badge { padding: 2px 8px; border-radius: 4px; font-size: .75rem; font-weight: bold; }
-.badge-win { background: #2c5f2d; color: #4caf50; }
-.badge-lose { background: #5f2c2c; color: #f44336; }
-.badge-push { background: #3a3a1a; color: #ffd700; }
-.loading { text-align: center; padding: 40px; color: #888; }
-.tabs { display: flex; gap: 4px; margin-bottom: 16px; }
-.tab { padding: 8px 16px; background: #0f1923; border: 1px solid #2a3a48; border-radius: 6px 6px 0 0; cursor: pointer; color: #aaa; }
-.tab.active { background: #2c5f2d; color: #fff; border-color: #2c5f2d; }
-#totalReturn.metric h3 { font-size: 1.2rem; }
+body { font-family: -apple-system, 'Microsoft YaHei', sans-serif; background: #0f1923; color: #e0e0e0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.card { width: 380px; background: #1a2a38; border-radius: 16px; padding: 32px; border: 1px solid #2a3a48; text-align: center; }
+h1 { color: #ffd700; font-size: 1.4rem; margin-bottom: 6px; }
+.sub { color: #666; font-size: .8rem; margin-bottom: 28px; }
+.links { display: flex; flex-direction: column; gap: 12px; }
+.links a { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 10px; text-decoration: none; color: #fff; font-size: 1rem; font-weight: bold; background: #0f1923; border: 1px solid #2a3a48; transition: all .2s; }
+.links a:hover { border-color: #ffd700; background: #1a2a38; }
+.links a .icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.icon.manual { background: #1a5276; }
+.icon.smart { background: #7d4e1a; }
+.links a .desc { font-size: .75rem; font-weight: normal; color: #888; }
 </style>
 </head>
 <body>
-
-<div class="header">
+<div class="card">
   <h1>世界杯彩票盈利系统</h1>
-  <div class="nav" style="display:flex;gap:4px;">
-    <a href="/" class="nav-link" style="padding:6px 16px;border-radius:6px;color:#fff;text-decoration:none;font-size:.85rem;background:#2c5f2d;border:1px solid #2c5f2d;">回测系统</a>
-    <a href="/manual" class="nav-link" style="padding:6px 16px;border-radius:6px;color:#aaa;text-decoration:none;font-size:.85rem;background:#1a2a38;border:1px solid #2a3a48;">手动投注</a>
-    <a href="/smart" class="nav-link" style="padding:6px 16px;border-radius:6px;color:#aaa;text-decoration:none;font-size:.85rem;background:#1a2a38;border:1px solid #2a3a48;">智能下注</a>
-  </div>
-  <div class="controls">
-    <select id="strategySelect">
-      <option value="five_signal">五信号动态统计</option>
-      <option value="momentum">锦标赛动量</option>
-      <option value="favorite">买强队</option>
-      <option value="kelly">凯利公式</option>
-      <option value="strong_favorite">深盘强队</option>
-      <option value="draw_hunter">平局猎人</option>
-      <option value="knockout_underdog">淘汰赛下盘</option>
-      <option value="odds_range">赔率区间</option>
-      <option value="value_bet">价值投注</option>
-    </select>
-    <select id="yearFrom"></select>
-    <span>—</span>
-    <select id="yearTo"></select>
-    <select id="stageSelect">
-      <option value="全部">全部</option>
-      <option value="小组赛">小组赛</option>
-      <option value="淘汰赛">淘汰赛</option>
-    </select>
-    <input id="bankroll" type="number" value="10000" placeholder="初始资金" style="width:110px">
-    <input id="stake" type="number" value="100" placeholder="单注金额" style="width:100px">
-    <button id="runBtn" onclick="runBacktest()">运行回测</button>
-    <button id="scrapeBtn" onclick="scrapeData()" style="background:#1a3a5c;border-color:#3a5a8a;">爬取数据</button>
+  <p class="sub">2026 World Cup Betting — 均值回归策略</p>
+  <div class="links">
+    <a href="/manual">
+      <span class="icon manual">&#x1F4DD;</span>
+      <div>
+        手动投注
+        <div class="desc">比赛管理 · 赔率录入 · 下注 · 自动结算</div>
+      </div>
+    </a>
+    <a href="/smart">
+      <span class="icon smart">&#x1F9E0;</span>
+      <div>
+        智能分析
+        <div class="desc">双窗口统计 · 多维度均值回归推荐</div>
+      </div>
+    </a>
   </div>
 </div>
-
-<div class="main">
-  <!-- 指标卡片 -->
-  <div class="card full-width" id="metricsCard" style="padding-bottom:12px;">
-    <h3 style="margin-bottom:8px;">回测结果</h3>
-    <div class="metrics" id="metrics">
-      <div class="metric"><div class="value" id="totalReturn">--</div><div class="label">总收益率</div></div>
-      <div class="metric"><div class="value" id="finalBankroll">--</div><div class="label">最终资金 ¥</div></div>
-      <div class="metric"><div class="value" id="winRate">--</div><div class="label">胜率</div></div>
-      <div class="metric"><div class="value" id="maxDd">--</div><div class="label">最大回撤</div></div>
-    </div>
-    <div class="chart-container"><canvas id="equityChart"></canvas></div>
-  </div>
-
-  <!-- 下注记录 -->
-  <div class="card full-width">
-    <h3>下注记录 <span id="betCount" style="color:#888;font-weight:normal;font-size:.85rem;"></span></h3>
-    <div style="max-height:400px;overflow-y:auto;">
-      <table id="betTable">
-        <thead><tr>
-          <th>比赛</th><th>投注方向</th><th>金额</th><th>赔率</th><th>结果</th><th>盈亏</th>
-        </tr></thead>
-        <tbody id="betBody"><tr><td colspan="7" class="loading">请先运行回测</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<script>
-const API = '';
-let equityChart = null;
-
-// 初始化年份选择器
-async function initYears() {
-  const resp = await fetch(API + '/api/matches/count');
-  const data = await resp.json();
-  const years = data.years.length ? data.years : [2010, 2014, 2018, 2022];
-  const from = document.getElementById('yearFrom');
-  const to = document.getElementById('yearTo');
-  years.forEach(y => {
-    from.add(new Option(y, y));
-    to.add(new Option(y, y));
-  });
-  to.value = years[years.length - 1];
-}
-
-// 运行回测
-async function runBacktest() {
-  const btn = document.getElementById('runBtn');
-  btn.disabled = true; btn.textContent = '回测中...';
-  try {
-    const body = {
-      strategy_name: document.getElementById('strategySelect').value,
-      start_year: parseInt(document.getElementById('yearFrom').value),
-      end_year: parseInt(document.getElementById('yearTo').value),
-      stage: document.getElementById('stageSelect').value,
-      initial_bankroll: parseFloat(document.getElementById('bankroll').value),
-      stake_per_bet: parseFloat(document.getElementById('stake').value),
-    };
-
-    const resp = await fetch(API + '/api/backtest/run', {
-      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
-    });
-    if (!resp.ok) { const err = await resp.json(); alert(err.detail); return; }
-
-    const result = await resp.json();
-    updateMetrics(result.summary);
-    renderChart(result.equity_curve);
-    loadBets(result.run_id);
-  } finally {
-    btn.disabled = false; btn.textContent = '运行回测';
-  }
-}
-
-// 更新指标卡片
-function updateMetrics(s) {
-  document.getElementById('totalReturn').textContent = (s.total_return * 100).toFixed(2) + '%';
-  document.getElementById('totalReturn').className = `value ${s.total_return >= 0 ? 'positive' : 'negative'}`;
-  document.getElementById('finalBankroll').textContent = '¥' + s.final_bankroll.toLocaleString();
-  document.getElementById('finalBankroll').className = `value ${s.final_bankroll >= s.initial_bankroll ? 'positive' : 'negative'}`;
-  document.getElementById('winRate').textContent = (s.win_rate * 100).toFixed(1) + '%';
-  document.getElementById('maxDd').textContent = (s.max_drawdown * 100).toFixed(2) + '%';
-  document.getElementById('maxDd').className = `value ${s.max_drawdown > 0.2 ? 'negative' : 'positive'}`;
-}
-
-// 绘制收益曲线
-function renderChart(curve) {
-  if (equityChart) equityChart.destroy();
-  const ctx = document.getElementById('equityChart').getContext('2d');
-  const labels = curve.map(p => p.match_label.length > 20 ? p.match_label.substring(0, 20) + '...' : p.match_label);
-  const data = curve.map(p => p.bankroll);
-  const bets = curve.filter(p => p.result !== 'skip');
-  const buyPoints = bets.map(b => curve.indexOf(b));
-  const buyValues = bets.map(b => b.bankroll);
-
-  equityChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: '资金曲线',
-          data: data,
-          borderColor: '#ffd700',
-          backgroundColor: 'rgba(255,215,0,0.05)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 0,
-          borderWidth: 2,
-        },
-        {
-          label: '下注点',
-          data: buyValues.map((v, i) => ({ x: buyPoints[i], y: v })),
-          backgroundColor: buyPoints.map((_, i) => {
-            const b = bets[i];
-            if (b.result === 'win') return '#4caf50';
-            if (b.result === 'lose') return '#f44336';
-            return '#ffd700';
-          }),
-          borderColor: 'transparent',
-          pointRadius: 5,
-          pointHoverRadius: 8,
-          showLine: false,
-        }
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { intersect: false, mode: 'index' },
-      plugins: { legend: { labels: { color: '#aaa', usePointStyle: true } } },
-      scales: {
-        x: { ticks: { color: '#666', maxTicksLimit: 15, maxRotation: 45 }, grid: { color: '#1e2e3e' } },
-        y: { ticks: { color: '#666', callback: v => '¥' + v.toLocaleString() }, grid: { color: '#1e2e3e' } },
-      }
-    }
-  });
-}
-
-// 加载下注记录
-async function loadBets(runId) {
-  const resp = await fetch(API + `/api/backtest/bets?run_id=${runId}&page_size=200`);
-  const data = await resp.json();
-  document.getElementById('betCount').textContent = `共 ${data.total} 笔下注`;
-  const tbody = document.getElementById('betBody');
-  if (!data.data.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="loading">无下注记录</td></tr>';
-    return;
-  }
-  const betOnLabel = { home: '主胜', draw: '平局', away: '客胜' };
-  tbody.innerHTML = data.data.map(b => {
-    const resultClass = b.result === 'win' ? 'badge-win' : b.result === 'lose' ? 'badge-lose' : 'badge-push';
-    const resultLabel = { win: '赢', lose: '输', push: '走水' }[b.result] || b.result;
-    const profitClass = b.profit > 0 ? 'positive' : b.profit < 0 ? 'negative' : '';
-    return `<tr>
-      <td>${b.match_info}</td>
-      <td>${betOnLabel[b.bet_on] || b.bet_on}</td>
-      <td>¥${b.stake.toFixed(0)}</td>
-      <td>${b.odds_taken.toFixed(2)}</td>
-      <td><span class="badge ${resultClass}">${resultLabel}</span></td>
-      <td class="${profitClass}">${b.profit >= 0 ? '+' : ''}¥${b.profit.toFixed(2)}</td>
-    </tr>`;
-  }).join('');
-}
-
-// 爬取数据
-async function scrapeData() {
-  const btn = document.getElementById('scrapeBtn');
-  btn.disabled = true; btn.textContent = '爬取中...';
-  try {
-    const resp = await fetch(API + '/api/scrape', { method: 'POST' });
-    const result = await resp.json();
-    alert(result.message || result.status);
-    initYears();
-  } finally {
-    btn.disabled = false; btn.textContent = '爬取数据';
-  }
-}
-
-initYears();
-</script>
 </body>
 </html>

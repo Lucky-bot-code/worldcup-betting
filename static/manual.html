@@ -86,12 +86,12 @@ tr:hover td { background: #1e3040; }
 <div class="header">
   <h1>世界杯彩票盈利系统</h1>
   <div class="nav">
-    <a href="/">回测系统</a>
     <a href="/manual" class="active">手动投注</a>
-    <a href="/smart">智能下注</a>
+    <a href="/smart">智能分析</a>
   </div>
+  <button class="btn btn-outline btn-sm" onclick="refreshOdds()" id="refreshOddsBtn" style="margin-right:12px;">&#x21BB; 刷新赔率</button>
   <div class="bankroll-display">
-    资金: <strong id="headerBankroll">¥10,000</strong>
+    资金: <strong id="headerBankroll">¥3,000</strong>
     <span class="profit" id="headerProfit"></span>
   </div>
 </div>
@@ -165,16 +165,27 @@ tr:hover td { background: #1e3040; }
 
     <!-- 总进球数 -->
     <div class="tab-panel bet-form" id="panel-over_under">
-      <label>总进球数赔率</label>
-      <input type="number" id="totalGoalsOdds" step="0.01" min="1.01" placeholder="赔率 如 4.50" style="width:140px">
+      <label>各进球数赔率</label>
+      <div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:52px;"><span style="font-size:.65rem;color:#888;">0球</span><input type="number" id="goOdds0" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><span style="font-size:.65rem;color:#888;">1球</span><input type="number" id="goOdds1" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><span style="font-size:.65rem;color:#888;">2球</span><input type="number" id="goOdds2" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><span style="font-size:.65rem;color:#888;">3球</span><input type="number" id="goOdds3" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><span style="font-size:.65rem;color:#888;">4球</span><input type="number" id="goOdds4" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><span style="font-size:.65rem;color:#888;">5球</span><input type="number" id="goOdds5" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><span style="font-size:.65rem;color:#888;">6球</span><input type="number" id="goOdds6" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><span style="font-size:.65rem;color:#888;">7+球</span><input type="number" id="goOdds7" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+      </div>
       <label>押注具体进球数</label>
-      <div class="direction-group" id="ouDir">
-        <div class="dir-btn" data-dir="0" onclick="selectDir(this, 'over_under')">0球</div>
-        <div class="dir-btn" data-dir="1" onclick="selectDir(this, 'over_under')">1球</div>
-        <div class="dir-btn" data-dir="2" onclick="selectDir(this, 'over_under')">2球</div>
-        <div class="dir-btn" data-dir="3" onclick="selectDir(this, 'over_under')">3球</div>
-        <div class="dir-btn" data-dir="4" onclick="selectDir(this, 'over_under')">4球</div>
-        <div class="dir-btn" data-dir="5+" onclick="selectDir(this, 'over_under')">5+球</div>
+      <div class="direction-group" id="ouDir" style="flex-wrap:wrap;">
+        <div class="dir-btn" data-dir="0" onclick="selectGoalsDir(this)">0球</div>
+        <div class="dir-btn" data-dir="1" onclick="selectGoalsDir(this)">1球</div>
+        <div class="dir-btn" data-dir="2" onclick="selectGoalsDir(this)">2球</div>
+        <div class="dir-btn" data-dir="3" onclick="selectGoalsDir(this)">3球</div>
+        <div class="dir-btn" data-dir="4" onclick="selectGoalsDir(this)">4球</div>
+        <div class="dir-btn" data-dir="5" onclick="selectGoalsDir(this)">5球</div>
+        <div class="dir-btn" data-dir="6" onclick="selectGoalsDir(this)">6球</div>
+        <div class="dir-btn" data-dir="7+" onclick="selectGoalsDir(this)">7+球</div>
       </div>
     </div>
 
@@ -247,7 +258,7 @@ tr:hover td { background: #1e3040; }
       <span style="font-size:1.2rem;color:#ffd700;">—</span>
       <input type="number" id="scoreA" min="0" max="15" placeholder="客队进球" style="width:80px">
     </div>
-    <p style="font-size:.75rem;color:#666;margin-bottom:6px;">赛前SPF赔率（供智能分析用，可选）</p>
+    <p style="font-size:.75rem;color:#666;margin-bottom:6px;">赛前SPF赔率（可选，已保存的会自动填入）</p>
     <div style="display:flex;gap:8px;justify-content:center;">
       <input type="number" id="oddsH" step="0.01" min="1.01" placeholder="主胜赔率" style="width:90px">
       <input type="number" id="oddsD" step="0.01" min="1.01" placeholder="平局赔率" style="width:90px">
@@ -260,11 +271,90 @@ tr:hover td { background: #1e3040; }
   </div>
 </div>
 
+<!-- 赔率编辑弹窗 -->
+<div class="modal-overlay" id="oddsModal">
+  <div class="modal" style="max-width:500px;">
+    <h3>编辑赔率</h3>
+    <p id="oddsMatchInfo" style="margin-bottom:12px;color:#aaa;font-size:.85rem;"></p>
+    <div style="max-height:55vh;overflow-y:auto;padding-right:4px;">
+      <!-- SPF -->
+      <h4 style="color:#4caf50;font-size:.85rem;margin-bottom:6px;">胜平负赔率</h4>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:1"><label style="font-size:.75rem;color:#888;">主胜</label><input type="number" id="editSpfHome" step="0.01" min="1.01" style="width:100%;padding:7px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;"></div>
+        <div style="flex:1"><label style="font-size:.75rem;color:#888;">平局</label><input type="number" id="editSpfDraw" step="0.01" min="1.01" style="width:100%;padding:7px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;"></div>
+        <div style="flex:1"><label style="font-size:.75rem;color:#888;">客胜</label><input type="number" id="editSpfAway" step="0.01" min="1.01" style="width:100%;padding:7px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;"></div>
+      </div>
+      <!-- 总进球 -->
+      <h4 style="color:#2196f3;font-size:.85rem;margin-bottom:6px;">总进球数赔率</h4>
+      <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:52px;"><label style="font-size:.65rem;color:#888;">0球</label><input type="number" id="editGo0" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><label style="font-size:.65rem;color:#888;">1球</label><input type="number" id="editGo1" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><label style="font-size:.65rem;color:#888;">2球</label><input type="number" id="editGo2" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><label style="font-size:.65rem;color:#888;">3球</label><input type="number" id="editGo3" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><label style="font-size:.65rem;color:#888;">4球</label><input type="number" id="editGo4" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><label style="font-size:.65rem;color:#888;">5球</label><input type="number" id="editGo5" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><label style="font-size:.65rem;color:#888;">6球</label><input type="number" id="editGo6" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+        <div style="flex:1;min-width:52px;"><label style="font-size:.65rem;color:#888;">7+球</label><input type="number" id="editGo7" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.75rem;"></div>
+      </div>
+      <!-- 比分 -->
+      <h4 style="color:#ff9800;font-size:.85rem;margin-bottom:6px;">常用比分赔率</h4>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;">
+      </div>
+      <div id="scoreOddsGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;"></div>
+    </div>
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn btn-outline" onclick="closeOddsModal()">取消</button>
+      <button class="btn" onclick="saveOdds()">保存赔率</button>
+    </div>
+  </div>
+</div>
+
+<!-- 赔率刷新进度遮罩 -->
+<div class="modal-overlay" id="refreshOverlay" style="z-index:200;">
+  <div class="modal" style="text-align:center;">
+    <h3>&#x21BB; 刷新赔率</h3>
+    <p id="refreshMsg" style="color:#aaa;margin:12px 0;">正在从 500.com 抓取赔率...</p>
+    <p style="font-size:.75rem;color:#666;">SPF + 总进球 + 比分 | 预计 30~60 秒</p>
+  </div>
+</div>
+
 <script>
 const API = '';
 let currentTab = 'spf';
 let selectedDirection = { spf: '', over_under: '', score: '' };
 let scoreModalMatchId = null;
+let refreshTimer = null;
+
+// ── 刷新赔率 ──────────────────────────────────────────
+
+async function refreshOdds() {
+  const btn = document.getElementById('refreshOddsBtn');
+  const overlay = document.getElementById('refreshOverlay');
+  const msg = document.getElementById('refreshMsg');
+  btn.disabled = true; btn.textContent = '刷新中...';
+  overlay.classList.add('show');
+  msg.textContent = '正在从 500.com 抓取赔率...';
+  let elapsed = 0;
+  refreshTimer = setInterval(() => { elapsed++; msg.textContent = `正在抓取赔率... 已耗时 ${elapsed} 秒`; }, 1000);
+  try {
+    const resp = await fetch(API + '/api/odds/refresh', { method: 'POST' });
+    const data = await resp.json();
+    clearInterval(refreshTimer);
+    overlay.classList.remove('show');
+    if (data.status === 'ok') {
+      alert(`赔率刷新完成！\n抓取 ${data.fetched} 场\n更新 ${data.updated} 场\n跳过 ${data.skipped} 场`);
+      loadMatches();
+    } else {
+      alert('刷新失败: ' + (data.message || '未知错误'));
+    }
+  } catch(e) {
+    clearInterval(refreshTimer);
+    overlay.classList.remove('show');
+    alert('刷新失败: ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '↻ 刷新赔率';
+}
 
 // ── 资金 ──────────────────────────────────────────────
 
@@ -305,6 +395,7 @@ async function loadMatches() {
         <div class="info"><div class="teams">${m.team_home} vs ${m.team_away}</div>
         <div class="meta">${m.match_day} · ${m.stage} · ${m.bet_count}笔下注 ${settled}</div></div>
         <div class="score">${score}</div>
+        ${m.is_settled ? '' : `<button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openOddsModal(${m.id},'${m.team_home} vs ${m.team_away}')">赔率</button>`}
         ${m.is_settled ? '' : `<button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openScoreModal(${m.id},'${m.team_home} vs ${m.team_away}')">赛果</button>`}
         <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteMatch(${m.id},${m.bet_count})">删</button>
       </div>`;
@@ -356,6 +447,12 @@ function openScoreModal(id, info) {
   document.getElementById('scoreMatchInfo').textContent = info;
   document.getElementById('scoreH').value = '';
   document.getElementById('scoreA').value = '';
+  // Auto-fill saved SPF odds
+  fetch(API + '/api/manual/matches/' + id).then(r => r.json()).then(m => {
+    if (m.odds_home) document.getElementById('oddsH').value = m.odds_home;
+    if (m.odds_draw) document.getElementById('oddsD').value = m.odds_draw;
+    if (m.odds_away) document.getElementById('oddsA').value = m.odds_away;
+  }).catch(() => {});
   document.getElementById('scoreModal').classList.add('show');
 }
 function closeScoreModal() {
@@ -411,27 +508,52 @@ function selectDir(el, type) {
   updateBetPreview();
 }
 
-function onMatchSelect() {
+async function onMatchSelect() {
+  const matchId = document.getElementById('betMatch').value;
+  if (!matchId) { updateBetPreview(); return; }
+  try {
+    const resp = await fetch(API + '/api/manual/matches/' + matchId);
+    const m = await resp.json();
+    // Auto-fill SPF odds
+    if (m.odds_home) document.getElementById('spfHome').value = m.odds_home;
+    if (m.odds_draw) document.getElementById('spfDraw').value = m.odds_draw;
+    if (m.odds_away) document.getElementById('spfAway').value = m.odds_away;
+    // Auto-fill goals odds
+    if (m.goals_odds_json) {
+      try {
+        const goals = JSON.parse(m.goals_odds_json);
+        for (let g = 0; g <= 7; g++) {
+          const el = document.getElementById('goOdds' + g);
+          if (el && goals[String(g)]) el.value = goals[String(g)];
+        }
+      } catch(e) {}
+    }
+    // Auto-fill score odds (store in a data attribute for later use)
+    if (m.score_odds_json) {
+      try {
+        const scores = JSON.parse(m.score_odds_json);
+        document.getElementById('betMatch').dataset.scoreOdds = JSON.stringify(scores);
+      } catch(e) {}
+    }
+  } catch(e) {}
   updateBetPreview();
 }
 
 // 比分方向实时更新
 document.addEventListener('DOMContentLoaded', () => {
-  ['scoreHome', 'scoreAway'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
-      const h = document.getElementById('scoreHome').value;
-      const a = document.getElementById('scoreAway').value;
-      if (h !== '' && a !== '') {
-        selectedDirection.score = h + '-' + a;
-        updateBetPreview();
-      }
-    });
-  });
+  document.getElementById('scoreHome').addEventListener('input', onScoreChange);
+  document.getElementById('scoreAway').addEventListener('input', onScoreChange);
   // 金额变化也更新预览
   document.getElementById('betStake').addEventListener('input', updateBetPreview);
-  ['spfHome','spfDraw','spfAway','ouOver','ouUnder','scoreOdds'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updateBetPreview);
+  ['spfHome','spfDraw','spfAway','scoreOdds'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateBetPreview);
   });
+  // 各进球数赔率变化更新预览
+  for (let g = 0; g <= 7; g++) {
+    const el = document.getElementById('goOdds' + g);
+    if (el) el.addEventListener('input', updateBetPreview);
+  }
 });
 
 function updateBetPreview() {
@@ -450,7 +572,10 @@ function updateBetPreview() {
   } else if (currentTab === 'over_under') {
     type = '总进球数';
     dir = selectedDirection.over_under || '--';
-    odds = parseFloat(document.getElementById('totalGoalsOdds').value) || 0;
+    // Map direction to per-goal odds field
+    const dirToIdx = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7+':7};
+    const idx = dirToIdx[dir];
+    odds = (idx !== undefined) ? (parseFloat(document.getElementById('goOdds' + idx).value) || 0) : 0;
   } else {
     type = '比分';
     dir = selectedDirection.score || '--';
@@ -489,8 +614,10 @@ async function placeBet() {
 
   } else if (currentTab === 'over_under') {
     if (!selectedDirection.over_under) { alert('请选择总进球数'); return; }
-    const odds = parseFloat(document.getElementById('totalGoalsOdds').value);
-    if (!odds || odds < 1.01) { alert('请输入有效赔率'); return; }
+    const dirToIdx = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7+':7};
+    const idx = dirToIdx[selectedDirection.over_under];
+    const odds = (idx !== undefined) ? (parseFloat(document.getElementById('goOdds' + idx).value) || 0) : 0;
+    if (!odds || odds < 1.01) { alert('请填写该进球数的赔率'); return; }
     body.odds_type = 'over_under';
     body.bet_direction = selectedDirection.over_under;
     body.odds_taken = odds;
@@ -519,6 +646,125 @@ async function placeBet() {
   loadBets();
   loadBankroll();
   loadMatches();
+}
+
+// ── 进球数方向选择 (自动填入对应赔率) ────────────────
+
+function selectGoalsDir(el) {
+  el.parentElement.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedDirection.over_under = el.dataset.dir;
+  // Auto-fill score odds if available
+  onScoreChange();
+  updateBetPreview();
+}
+
+// ── 赔率编辑弹窗 ──────────────────────────────────────
+
+const SCORE_KEYS = ['0:1','1:2','1:0','0:0','2:1','1:1','2:0','0:2'];
+
+let oddsModalMatchId = null;
+
+async function openOddsModal(id, info) {
+  oddsModalMatchId = id;
+  document.getElementById('oddsMatchInfo').textContent = info;
+  // Clear all fields
+  ['editSpfHome','editSpfDraw','editSpfAway'].forEach(x => document.getElementById(x).value = '');
+  for (let g = 0; g <= 7; g++) document.getElementById('editGo' + g).value = '';
+  // Build score odds grid
+  const grid = document.getElementById('scoreOddsGrid');
+  grid.innerHTML = SCORE_KEYS.map(sk => {
+    const idName = 'editSc' + sk.replace(':', '_');
+    return `<div><label style="font-size:.7rem;color:#888;">${sk}</label><input type="number" id="${idName}" step="0.01" min="1.01" style="width:100%;padding:5px;border-radius:6px;border:1px solid #3a3a3a;background:#0f1923;color:#fff;font-size:.78rem;"></div>`;
+  }).join('');
+  // Load existing odds
+  try {
+    const resp = await fetch(API + '/api/manual/matches/' + id);
+    const m = await resp.json();
+    if (m.odds_home) document.getElementById('editSpfHome').value = m.odds_home;
+    if (m.odds_draw) document.getElementById('editSpfDraw').value = m.odds_draw;
+    if (m.odds_away) document.getElementById('editSpfAway').value = m.odds_away;
+    if (m.goals_odds_json) {
+      try {
+        const goals = JSON.parse(m.goals_odds_json);
+        for (let g = 0; g <= 7; g++) {
+          if (goals[String(g)]) document.getElementById('editGo' + g).value = goals[String(g)];
+        }
+      } catch(e) {}
+    }
+    if (m.score_odds_json) {
+      try {
+        const scores = JSON.parse(m.score_odds_json);
+        for (const [sk, sv] of Object.entries(scores)) {
+          const el = document.getElementById('editSc' + sk.replace(':', '_'));
+          if (el) el.value = sv;
+        }
+      } catch(e) {}
+    }
+  } catch(e) {}
+  document.getElementById('oddsModal').classList.add('show');
+}
+
+function closeOddsModal() {
+  document.getElementById('oddsModal').classList.remove('show');
+  oddsModalMatchId = null;
+}
+
+async function saveOdds() {
+  const body = {};
+  const spfH = parseFloat(document.getElementById('editSpfHome').value);
+  const spfD = parseFloat(document.getElementById('editSpfDraw').value);
+  const spfA = parseFloat(document.getElementById('editSpfAway').value);
+  if (spfH) body.odds_home = spfH;
+  if (spfD) body.odds_draw = spfD;
+  if (spfA) body.odds_away = spfA;
+
+  // Collect goals odds
+  const goals = {};
+  for (let g = 0; g <= 7; g++) {
+    const v = parseFloat(document.getElementById('editGo' + g).value);
+    if (v) goals[String(g)] = v;
+  }
+  if (Object.keys(goals).length > 0) body.goals_odds_json = JSON.stringify(goals);
+
+  // Collect score odds
+  const scores = {};
+  for (const sk of SCORE_KEYS) {
+    const el = document.getElementById('editSc' + sk.replace(':', '_'));
+    if (el && el.value) {
+      const v = parseFloat(el.value);
+      if (v) scores[sk] = v;
+    }
+  }
+  if (Object.keys(scores).length > 0) body.score_odds_json = JSON.stringify(scores);
+
+  if (Object.keys(body).length === 0) { alert('请至少填写一项赔率'); return; }
+
+  await fetch(API + '/api/manual/matches/' + oddsModalMatchId, {
+    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+  });
+  closeOddsModal();
+  loadMatches();
+}
+
+// ── 比分自动填赔率 ──────────────────────────────────────
+
+function onScoreChange() {
+  const h = document.getElementById('scoreHome').value;
+  const a = document.getElementById('scoreAway').value;
+  if (h !== '' && a !== '') {
+    const key = h + ':' + a;
+    selectedDirection.score = key;
+    // Try to auto-fill from saved score odds
+    const data = document.getElementById('betMatch').dataset.scoreOdds;
+    if (data) {
+      try {
+        const scores = JSON.parse(data);
+        if (scores[key]) document.getElementById('scoreOdds').value = scores[key];
+      } catch(e) {}
+    }
+  }
+  updateBetPreview();
 }
 
 // ── 投注记录 ──────────────────────────────────────────
